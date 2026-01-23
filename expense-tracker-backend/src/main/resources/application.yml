@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: expense-tracker-backend
+  datasource:
+    url: jdbc:sqlite:expense-tracker.db
+    driver-class-name: org.sqlite.JDBC
+    username: sa
+    password: password
+  jpa:
+    database-platform: org.hibernate.community.dialect.SQLiteDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    open-in-view: false
+  sql:
+    init:
+      mode: always

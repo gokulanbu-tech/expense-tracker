@@ -1,0 +1,180 @@
+/* Container */
+.container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Mobile Header */
+.mobileHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-md);
+    background-color: var(--bg-card);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    position: sticky;
+    top: 0;
+    z-index: 40;
+}
+
+@media (min-width: 768px) {
+    .mobileHeader {
+        display: none;
+    }
+
+    .container {
+        flex-direction: row;
+    }
+}
+
+.logo {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 1.25rem;
+    color: var(--color-primary);
+    letter-spacing: -0.025em;
+}
+
+/* Sidebar */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 280px;
+    background-color: var(--bg-card);
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    transform: translateX(-100%);
+    transition: transform var(--transition-normal);
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar.open {
+    transform: translateX(0);
+}
+
+@media (min-width: 768px) {
+    .sidebar {
+        position: sticky;
+        transform: none;
+        height: 100vh;
+    }
+}
+
+.sidebarHeader {
+    padding: var(--space-lg);
+    display: none;
+}
+
+@media (min-width: 768px) {
+    .sidebarHeader {
+        display: block;
+    }
+}
+
+/* Nav */
+.nav {
+    flex: 1;
+    padding: var(--space-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.navItem {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-md);
+    border-radius: var(--radius-md);
+    color: var(--text-muted);
+    font-weight: 500;
+    transition: all var(--transition-fast);
+}
+
+.navItem:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: var(--text-main);
+}
+
+.navItem.active {
+    background-color: rgba(59, 130, 246, 0.1);
+    /* Primary with opacity */
+    color: var(--color-primary);
+}
+
+.navIcon {
+    font-size: 1.5rem;
+}
+
+/* User Info */
+.userInfo {
+    padding: var(--space-lg);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-full);
+    background-color: var(--color-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+}
+
+.userDetails {
+    display: flex;
+    flex-direction: column;
+}
+
+.userName {
+    font-weight: 500;
+    color: var(--text-main);
+}
+
+.userBudget {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+/* Main Content */
+.main {
+    flex: 1;
+    width: 100%;
+}
+
+.content {
+    padding: var(--space-md);
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+    .content {
+        padding: var(--space-xl);
+    }
+}
+
+/* Backdrop */
+.backdrop {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 45;
+    backdrop-filter: blur(2px);
+}
+
+@media (min-width: 768px) {
+    .backdrop {
+        display: none;
+    }
+}

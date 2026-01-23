@@ -1,0 +1,82 @@
+.container {
+    max-width: 600px;
+    /* Focus on content */
+    margin: 0 auto;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-lg);
+}
+
+.title {
+    font-size: 1.25rem;
+    margin: 0;
+}
+
+.notFound {
+    text-align: center;
+    padding: var(--space-xl) 0;
+}
+
+.detailsCard {
+    padding: var(--space-xl);
+}
+
+.amountSection {
+    text-align: center;
+    margin-bottom: var(--space-xl);
+    padding-bottom: var(--space-lg);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.currency {
+    font-size: 1.5rem;
+    color: var(--text-muted);
+    vertical-align: top;
+    margin-right: 4px;
+}
+
+.amount {
+    font-size: 3rem;
+    font-weight: 700;
+    font-family: var(--font-heading);
+}
+
+.metaGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-lg);
+    margin-bottom: var(--space-lg);
+}
+
+.metaItem {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.label {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.value {
+    font-weight: 500;
+    font-size: 1.125rem;
+}
+
+.notesSection {
+    margin-top: var(--space-lg);
+    padding-top: var(--space-lg);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.notes {
+    color: var(--text-muted);
+    line-height: 1.6;
+}

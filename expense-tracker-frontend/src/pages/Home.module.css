@@ -1,0 +1,285 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xl);
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.title {
+    font-size: 2rem;
+    margin-bottom: var(--space-xs);
+}
+
+.date {
+    color: var(--text-muted);
+}
+
+/* Tabs */
+.tabs {
+    display: flex;
+    background-color: var(--bg-card);
+    padding: 4px;
+    border-radius: var(--radius-lg);
+    gap: 4px;
+}
+
+.tab {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    padding: 8px;
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.activeTab {
+    background-color: var(--bg-input);
+    color: var(--text-main);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Summary Grid */
+.summaryGrid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-md);
+}
+
+.summaryCard {
+    background: linear-gradient(135deg, var(--bg-card) 0%, rgba(59, 130, 246, 0.1) 100%);
+}
+
+.cardLabel {
+    display: block;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin-bottom: var(--space-xs);
+}
+
+.amount {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: var(--space-sm);
+    font-family: var(--font-heading);
+}
+
+.budgetInfo {
+    margin-top: var(--space-md);
+}
+
+.progressContainer {
+    height: 6px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-full);
+    margin-bottom: var(--space-sm);
+    overflow: hidden;
+}
+
+.progressBar {
+    height: 100%;
+    background-color: var(--color-primary);
+    border-radius: var(--radius-full);
+    transition: width 1s ease-out;
+}
+
+.budgetLabel {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+/* Bills Section */
+.billsSection {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.billsList {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.billItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-md);
+}
+
+.billContent {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.billIcon {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-full);
+    background-color: rgba(239, 68, 68, 0.1);
+    color: var(--color-error);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.billTitle {
+    font-weight: 500;
+}
+
+.billDate {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.billAction {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.billAmount {
+    font-weight: 600;
+}
+
+/* Timeline */
+.sectionHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-md);
+}
+
+.sectionTitle {
+    font-size: 1.25rem;
+    margin: 0;
+}
+
+.timeline {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+    padding-left: var(--space-md);
+    border-left: 2px solid rgba(255, 255, 255, 0.05);
+    margin-left: 60px;
+    /* Space for time labels */
+}
+
+.timelineItem {
+    position: relative;
+}
+
+.timelineTime {
+    position: absolute;
+    left: -75px;
+    top: 0;
+    width: 50px;
+    text-align: right;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.timelineNode {
+    position: absolute;
+    left: -25px;
+    top: 6px;
+    width: 12px;
+    height: 12px;
+    background-color: var(--color-primary);
+    border: 2px solid var(--bg-app);
+    border-radius: 50%;
+    z-index: 10;
+}
+
+.timelineContent {
+    cursor: pointer;
+}
+
+.timelineContent:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.expenseHeader {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: var(--space-xs);
+    font-weight: 500;
+}
+
+.expenseAmount {
+    color: var(--color-error);
+}
+
+.expenseFooter {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+.source {
+    font-size: 0.75rem;
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.emptyState {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* Charts */
+.chartSection {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.chartContainer {
+    height: 300px;
+    width: 100%;
+    margin-top: var(--space-md);
+}
+
+.chartCard {
+    padding: var(--space-lg);
+}
+
+.legend {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: var(--space-sm);
+    margin-top: var(--space-md);
+}
+
+.legendItem {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.legendColor {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.legendValue {
+    margin-left: auto;
+    color: var(--text-main);
+    font-weight: 500;
+}

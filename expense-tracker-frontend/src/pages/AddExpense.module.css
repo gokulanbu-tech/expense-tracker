@@ -1,0 +1,128 @@
+.container {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-lg);
+}
+
+.title {
+    font-size: 1.25rem;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xl);
+}
+
+.amountInputWrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: var(--space-md);
+}
+
+.currencyPrefix {
+    font-size: 2rem;
+    color: var(--text-muted);
+    margin-right: var(--space-xs);
+    margin-top: -6px;
+}
+
+.amountInput {
+    background: transparent;
+    border: none;
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: var(--text-main);
+    outline: none;
+    width: 100%;
+    text-align: center;
+    font-family: var(--font-heading);
+}
+
+.amountInput::placeholder {
+    color: rgba(255, 255, 255, 0.1);
+}
+
+/* Card Fields */
+.card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.label {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.input,
+.select,
+.textarea {
+    background-color: var(--bg-input);
+    border: 1px solid transparent;
+    padding: var(--space-md);
+    border-radius: var(--radius-md);
+    color: var(--text-main);
+    font-size: 1rem;
+    font-family: inherit;
+    outline: none;
+    transition: all var(--transition-fast);
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+.textarea {
+    resize: vertical;
+}
+
+/* Chips */
+.chipGroup {
+    display: flex;
+    gap: var(--space-sm);
+    flex-wrap: wrap;
+}
+
+.chip {
+    background-color: var(--bg-input);
+    border: 1px solid transparent;
+    padding: 6px 12px;
+    border-radius: var(--radius-full);
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.chip:hover {
+    background-color: #475569;
+}
+
+.activeChip {
+    background-color: rgba(59, 130, 246, 0.2);
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.submitBtn {
+    margin-top: var(--space-md);
+    width: 100%;
+}

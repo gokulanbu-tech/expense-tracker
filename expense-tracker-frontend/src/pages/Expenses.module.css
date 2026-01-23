@@ -1,0 +1,75 @@
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-lg);
+}
+
+.title {
+    font-size: 1.5rem;
+}
+
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.expenseItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    padding: var(--space-md);
+    transition: background-color var(--transition-fast);
+}
+
+.expenseItem:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.expenseMain {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.merchant {
+    font-weight: 500;
+    font-size: 1rem;
+}
+
+.date {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.expenseMeta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: var(--space-xs);
+}
+
+.amount {
+    font-weight: 600;
+    color: var(--color-error);
+}
+
+.category {
+    font-size: 0.75rem;
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+}
+
+.emptyState {
+    text-align: center;
+    padding: var(--space-xl);
+    color: var(--text-muted);
+}

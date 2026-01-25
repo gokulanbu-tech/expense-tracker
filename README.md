@@ -151,4 +151,4 @@ This project is for educational purposes.
 
 ## 👨‍💻 Author
 
-Built with ❤️ by Gokulan Barasan
+Built with ❤️ by Gokul Anbarasan

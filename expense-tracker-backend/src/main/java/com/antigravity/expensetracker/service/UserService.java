@@ -33,4 +33,34 @@ public class UserService {
         }
         throw new RuntimeException("Invalid credentials");
     }
+
+    public User findOrCreateByEmail(String email, String firstName, String lastName) {
+        return userRepository.findByEmail(email).orElseGet(() -> {
+            User newUser = new User();
+            newUser.setEmail(email);
+            newUser.setFirstName(firstName);
+            newUser.setLastName(lastName);
+            newUser.setMobileNumber("G-" + System.currentTimeMillis()); // Placeholder for Google login
+            newUser.setPassword("google-auth-pwd"); // Dummy password
+            return userRepository.save(newUser);
+        });
+    }
+
+    public User updateUser(java.util.UUID id, User userDetails) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!user.getEmail().equalsIgnoreCase(userDetails.getEmail())) {
+            if (userRepository.findByEmail(userDetails.getEmail()).isPresent()) {
+                throw new RuntimeException("User with this email already exists");
+            }
+            user.setEmail(userDetails.getEmail());
+        }
+
+        user.setFirstName(userDetails.getFirstName());
+        user.setLastName(userDetails.getLastName());
+        user.setMonthlyBudget(userDetails.getMonthlyBudget());
+
+        return userRepository.save(user);
+    }
 }

@@ -19,7 +19,7 @@ export function AddExpense() {
         amount: '',
         category: 'Food',
         type: 'Purchase' as Expense['type'],
-        date: new Date().toISOString().split('T')[0],
+        date: new Date().toLocaleDateString('en-CA'),
         merchant: '',
         notes: ''
     });

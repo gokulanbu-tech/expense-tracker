@@ -63,7 +63,7 @@ export function Details() {
 
                     <div className={styles.metaItem}>
                         <span className={styles.label}>Date</span>
-                        <span className={styles.value}>{format(new Date(expense.date), 'PPP p')}</span>
+                        <span className={styles.value}>{format(new Date(expense.date), 'PPP')}</span>
                     </div>
 
                     <div className={styles.metaItem}>

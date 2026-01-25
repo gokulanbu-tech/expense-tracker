@@ -1,0 +1,29 @@
+name: expense_tracker_mobile
+description: A new Flutter project for tracking expenses via SMS.
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+  http: ^1.1.0
+  intl: ^0.18.1
+  provider: ^6.0.5
+  telephony: ^0.2.0
+  shared_preferences: ^2.2.0
+  fl_chart: ^0.63.0
+  google_fonts: ^6.1.0
+  google_sign_in: ^6.1.6
+  googleapis: ^11.4.0
+  extension_google_sign_in_as_googleapis_auth: ^2.0.13
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+
+flutter:
+  uses-material-design: true

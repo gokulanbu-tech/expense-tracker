@@ -1,11 +1,8 @@
 package com.antigravity.expensetracker.controller;
 
 import com.antigravity.expensetracker.model.User;
-import com.antigravity.expensetracker.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/user")
@@ -13,24 +10,20 @@ import java.util.Optional;
 public class UserController {
 
     @Autowired
-    private UserRepository userRepository;
+    private com.antigravity.expensetracker.repository.UserRepository userRepository;
 
-    @GetMapping
-    public User getUser() {
-        // For simplicity in this demo, return the first user or create a default one
-        return userRepository.findAll().stream().findFirst().orElseGet(() -> {
-            User newUser = new User();
-            newUser.setEmail("user@example.com");
-            newUser.setFirstName("Demo");
-            newUser.setLastName("User");
-            newUser.setMobileNumber("1234567890");
-            newUser.setPassword("password");
-            return userRepository.save(newUser);
-        });
+    @Autowired
+    private com.antigravity.expensetracker.service.UserService userService;
+
+    @GetMapping("/{id}")
+    public User getUser(@PathVariable("id") java.util.UUID id) {
+        System.out.println("Fetching user with ID: " + id);
+        return userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
     }
 
-    @PutMapping
-    public User updateUser(@RequestBody User user) {
-        return userRepository.save(user);
+    @PutMapping("/{id}")
+    public User updateUser(@PathVariable("id") java.util.UUID id, @RequestBody User user) {
+        System.out.println("Updating user with ID: " + id);
+        return userService.updateUser(id, user);
     }
 }

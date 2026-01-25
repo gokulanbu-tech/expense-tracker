@@ -36,4 +36,17 @@ public class AuthController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    @PostMapping("/google-login")
+    public ResponseEntity<?> googleLogin(@RequestBody Map<String, String> data) {
+        try {
+            String email = data.get("email");
+            String firstName = data.get("firstName");
+            String lastName = data.get("lastName");
+            User user = userService.findOrCreateByEmail(email, firstName, lastName);
+            return ResponseEntity.ok(user);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }

@@ -32,7 +32,7 @@ export function EditExpense() {
                 amount: expense.amount.toString(),
                 category: expense.category,
                 type: expense.type,
-                date: new Date(expense.date).toISOString().split('T')[0],
+                date: expense.date.includes('T') ? expense.date.split('T')[0] : expense.date.split(' ')[0],
                 merchant: expense.merchant,
                 notes: expense.notes || ''
             });

@@ -52,7 +52,9 @@ export function Details() {
             <Card className={styles.detailsCard}>
                 <div className={styles.amountSection}>
                     <span className={styles.currency}>{expense.currency}</span>
-                    <span className={styles.amount}>{expense.amount.toFixed(2)}</span>
+                    <span className={expense.type === 'Credited' ? styles.amountPositive : styles.amount}>
+                        {expense.amount.toFixed(2)}
+                    </span>
                 </div>
 
                 <div className={styles.metaGrid}>

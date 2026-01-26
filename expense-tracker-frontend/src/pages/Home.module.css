@@ -221,6 +221,10 @@
     color: var(--color-error);
 }
 
+.expenseAmountPositive {
+    color: var(--color-secondary);
+}
+
 .expenseFooter {
     display: flex;
     justify-content: space-between;

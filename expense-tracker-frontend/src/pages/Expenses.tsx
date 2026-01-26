@@ -38,7 +38,9 @@ export function Expenses() {
                         </div>
                         <div className={styles.expenseMeta}>
                             <span className={styles.category}>{expense.category}</span>
-                            <span className={styles.amount}>-₹{expense.amount.toFixed(2)}</span>
+                            <span className={expense.type === 'Credited' ? styles.amountPositive : styles.amount}>
+                                {expense.type === 'Credited' ? '+' : '-'}₹{expense.amount.toFixed(2)}
+                            </span>
                         </div>
                     </Card>
                 ))}

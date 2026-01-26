@@ -21,7 +21,8 @@ class _HomeScreenState extends State<HomeScreen> {
   List<dynamic> _allExpenses = [];
   List<dynamic> _filteredExpenses = [];
   bool _isLoading = true;
-  double _totalAmount = 0;
+  double _totalAmount = 0; // Interpreted as Expenses
+  double _totalIncome = 0;
 
   final List<String> _timeframes = ['Daily', 'Weekly', 'Monthly', 'Yearly'];
 
@@ -77,7 +78,20 @@ class _HomeScreenState extends State<HomeScreen> {
             return true;
         }
       }).toList();
-      _totalAmount = _filteredExpenses.fold(0.0, (sum, item) => sum + (item['amount'] as num).toDouble());
+      
+      _totalAmount = 0;
+      _totalIncome = 0;
+      
+      for (var item in _filteredExpenses) {
+        final amount = (item['amount'] as num).toDouble();
+        final type = item['type']?.toString().toLowerCase();
+        
+        if (type == 'credited') {
+          _totalIncome += amount;
+        } else {
+          _totalAmount += amount;
+        }
+      }
     });
   }
 
@@ -228,6 +242,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                    label: "Budget", 
                                    value: "₹ ${((user?['monthlyBudget'] ?? 0.0) as num).toStringAsFixed(0)}"
                                  ),
+                                 if (_totalIncome > 0)
+                                 _InfoTile(
+                                   label: "Income", 
+                                   value: "₹ ${_totalIncome.toStringAsFixed(0)}"
+                                 ),
                                  _InfoTile(
                                    label: "Remaining", 
                                    value: "₹ ${(((user?['monthlyBudget'] ?? 0.0) as num) - _totalAmount).toStringAsFixed(0)}"
@@ -367,8 +386,11 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                             Text(
-                              "- ₹ ${expense['amount']}",
-                              style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
+                              "${(expense['type'].toString().toLowerCase() == 'credited') ? '+' : '-'} ₹ ${expense['amount']}",
+                              style: TextStyle(
+                                color: (expense['type'].toString().toLowerCase() == 'credited') ? const Color(0xFF10B981) : Colors.redAccent,
+                                fontWeight: FontWeight.bold
+                              ),
                             ),
                           ],
                         ),
@@ -388,6 +410,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildPieChart() {
     final Map<String, double> categoryData = {};
     for (var expense in _filteredExpenses) {
+      if (expense['type']?.toString().toLowerCase() == 'credited') continue;
       final category = expense['category'] ?? 'Other';
       categoryData[category] = (categoryData[category] ?? 0) + (expense['amount'] as num).toDouble();
     }
@@ -413,6 +436,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildChartLegend() {
     final Map<String, double> categoryData = {};
     for (var expense in _filteredExpenses) {
+      if (expense['type']?.toString().toLowerCase() == 'credited') continue;
       final category = expense['category'] ?? 'Other';
       categoryData[category] = (categoryData[category] ?? 0) + (expense['amount'] as num).toDouble();
     }

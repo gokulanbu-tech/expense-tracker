@@ -226,7 +226,9 @@ export function Home() {
                                 <Card className={styles.timelineContent} onClick={() => navigate(`/expenses/${expense.id}`)}>
                                     <div className={styles.expenseHeader}>
                                         <span className={styles.merchant}>{expense.merchant}</span>
-                                        <span className={styles.expenseAmount}>-₹{expense.amount.toFixed(2)}</span>
+                                        <span className={expense.type === 'Credited' ? styles.expenseAmountPositive : styles.expenseAmount}>
+                                            {expense.type === 'Credited' ? '+' : '-'}₹{expense.amount.toFixed(2)}
+                                        </span>
                                     </div>
                                     <div className={styles.expenseFooter}>
                                         <span className={styles.category}>{expense.category}</span>

@@ -144,4 +144,16 @@ class ApiService {
       }
     ];
   }
+
+  Future<void> saveEmailLog(Map<String, dynamic> emailData) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/emails"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode(emailData),
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception("Failed to sync email log: ${response.body}");
+    }
+  }
 }

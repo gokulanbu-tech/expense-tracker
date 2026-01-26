@@ -45,6 +45,13 @@
     font-family: var(--font-heading);
 }
 
+.amountPositive {
+    font-size: 3rem;
+    font-weight: 700;
+    font-family: var(--font-heading);
+    color: var(--color-secondary);
+}
+
 .metaGrid {
     display: grid;
     grid-template-columns: 1fr 1fr;

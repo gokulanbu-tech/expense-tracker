@@ -1,0 +1,207 @@
+package com.antigravity.expensetracker.service;
+
+import com.antigravity.expensetracker.model.EmailLog;
+import com.antigravity.expensetracker.model.Expense;
+import com.antigravity.expensetracker.repository.ExpenseRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+@Service
+public class EmailParsingService {
+
+    @Autowired
+    private ExpenseRepository expenseRepository;
+
+    public void parseAndCreateExpense(EmailLog emailLog) {
+        String rawSubject = emailLog.getSubject();
+        String rawBody = emailLog.getBody();
+        String normalizedSubject = rawSubject.replace('\u00A0', ' ').replaceAll("\\s+", " ");
+
+        System.out.println("DEBUG Parsing Subject: [" + normalizedSubject + "]");
+
+        Expense expense = extractExpense(normalizedSubject, rawBody);
+
+        if (expense != null) {
+            expense.setUser(emailLog.getUser());
+            expense.setSource("Mail");
+            expense.setDate(emailLog.getReceivedAt());
+            expenseRepository.save(expense);
+            System.out.println("Parsed and saved expense: " + expense.getAmount() + " for " + expense.getMerchant());
+        } else {
+            System.out.println("Could not extract expense from email: " + emailLog.getId());
+        }
+    }
+
+    private Expense extractExpense(String subject, String rawBody) {
+        String regex = "(?:INR|Rs\\.?|₹)\\s*([\\d,.]+)\\s+(?:was\\s+)?(debited|credited|spent)(?:\\s+from|\\s+to|\\s+on)?\\s*(.*)";
+        Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
+        Matcher matcher = pattern.matcher(subject);
+
+        if (matcher.find()) {
+            try {
+                String amountStr = matcher.group(1).replace(",", "");
+                String typeStr = matcher.group(2);
+                String remainder = matcher.group(3);
+
+                BigDecimal amount = new BigDecimal(amountStr);
+
+                String type;
+                if (typeStr.equalsIgnoreCase("credited")) {
+                    type = "Credited";
+                } else if (typeStr.equalsIgnoreCase("debited")) {
+                    type = "Debited";
+                } else {
+                    type = "Spent";
+                }
+
+                String merchant = "Unknown";
+                String notes = "Auto-parsed from Email Log";
+
+                if (type.equals("Credited")) {
+                    merchant = "Credit to Account";
+                }
+
+                if (!type.equals("Credited")) {
+                    if (remainder.toLowerCase().contains("your a/c")
+                            || remainder.toLowerCase().contains("credit card")) {
+                        merchant = "Bank Transaction";
+                    } else if (remainder.toLowerCase().contains("towards")) {
+                        merchant = remainder.split("towards")[1].trim().split("\\s|\\.")[0];
+                    } else {
+                        merchant = "Bank Transaction";
+                    }
+                }
+
+                Pattern merchantPattern = Pattern.compile("Merchant Name[:\\s]+([^\\n\\r]+)", Pattern.CASE_INSENSITIVE);
+                Matcher merchantMatcher = merchantPattern.matcher(rawBody);
+
+                Pattern fullUpiPattern = Pattern.compile("(UPI\\/(?:P2A|P2M|P2P)\\/[^\\n\\r]+)",
+                        Pattern.CASE_INSENSITIVE);
+                Matcher fullUpiMatcher = fullUpiPattern.matcher(rawBody);
+
+                boolean merchantFoundByName = false;
+                if (merchantMatcher.find()) {
+                    String found = merchantMatcher.group(1).trim();
+                    if (found.length() > 1 && found.length() < 50) {
+                        merchant = found;
+                        merchantFoundByName = true;
+                    }
+                }
+
+                if (fullUpiMatcher.find()) {
+                    String matchedUpi = fullUpiMatcher.group(1).replaceAll("<[^>]+>", "").trim();
+                    notes = matchedUpi;
+
+                    if (!merchantFoundByName) {
+                        String[] parts = notes.split("/");
+                        if (parts.length >= 4) {
+                            String potentialMerchant = parts[3].trim();
+                            if (potentialMerchant.length() > 1 && potentialMerchant.length() < 100) {
+                                merchant = potentialMerchant;
+                            }
+                        }
+                    }
+                }
+
+                Expense expense = new Expense();
+                expense.setAmount(amount);
+                expense.setCurrency("INR");
+                expense.setMerchant(merchant);
+                expense.setType(type);
+
+                if (type.equals("Transfer")) {
+                    expense.setCategory("Transaction");
+                } else if (merchant.equalsIgnoreCase("Bank Transaction")) {
+                    expense.setCategory("Transaction");
+                } else {
+                    String cat = categorize(merchant, remainder);
+
+                    if (notes.startsWith("UPI") && cat.equals("General")) {
+                        expense.setCategory("Transaction");
+                    } else if (type.equals("Spent") && cat.equals("General")) {
+                        expense.setCategory("Utilities");
+                    } else {
+                        expense.setCategory(cat);
+                    }
+                }
+
+                expense.setNotes(notes);
+                return expense;
+
+            } catch (Exception e) {
+                System.out.println("Error parsing matched expense: " + e.getMessage());
+                return null;
+            }
+        }
+        return null;
+    }
+
+    private String categorize(String merchant, String context) {
+        String m = (merchant + " " + context).toLowerCase();
+
+        if (m.contains("dreamplug") || m.contains("cred "))
+            return "Transaction";
+
+        if (m.contains("swiggy") || m.contains("zomato") || m.contains("food") || m.contains("restaurant")
+                || m.contains("starbucks") || m.contains("cafe") || m.contains("coffee") || m.contains("tea")
+                || m.contains("burger") || m.contains("pizza") || m.contains("dominos") || m.contains("kfc")
+                || m.contains("mcdonalds") || m.contains("subway") || m.contains("dining") || m.contains("eat"))
+            return "Food";
+
+        if (m.contains("uber") || m.contains("ola") || m.contains("rapido") || m.contains("redbus")
+                || m.contains("irctc") || m.contains("railway") || m.contains("metro") || m.contains("train")
+                || m.contains("flight") || m.contains("indigo") || m.contains("vistara") || m.contains("air india")
+                || m.contains("makemytrip") || m.contains("goibibo") || m.contains("yatra") || m.contains("booking")
+                || m.contains("petrol") || m.contains("fuel") || m.contains("diesel") || m.contains("shell")
+                || m.contains("hpcl") || m.contains("bpcl") || m.contains("ioc")
+                || m.contains("fastag") || m.contains("transport")) {
+            System.out.println("DEBUG: Categorized as Travel because of string [" + m + "]");
+            return "Travel";
+        }
+
+        if (m.contains("bigbasket") || m.contains("blinkit") || m.contains("zepto") || m.contains("instamart")
+                || m.contains("dmart") || m.contains("grocery") || m.contains("supermarket") || m.contains("market")
+                || m.contains("fresh") || m.contains("vegetable") || m.contains("fruit") || m.contains("milk")
+                || m.contains("dairy"))
+            return "Groceries";
+
+        if (m.contains("amazon") || m.contains("flipkart") || m.contains("myntra") || m.contains("ajio")
+                || m.contains("meesho") || m.contains("nykaa") || m.contains("reliance") || m.contains("croma")
+                || m.contains("tata") || m.contains("retail") || m.contains("mart") || m.contains("store")
+                || m.contains("decathlon") || m.contains("ikea") || m.contains("zudio") || m.contains("westside")
+                || m.contains("pantaloons") || m.contains("cloth") || m.contains("fashion") || m.contains("shopping"))
+            return "Shopping";
+
+        if (m.contains("netflix") || m.contains("spotify") || m.contains("hotstar") || m.contains("prime video")
+                || m.contains("youtube") || m.contains("movie") || m.contains("cinema") || m.contains("pvr")
+                || m.contains("inox") || m.contains("bookmyshow") || m.contains("game") || m.contains("steam")
+                || m.contains("playstation") || m.contains("entertainment"))
+            return "Entertainment";
+
+        // Utilities & Bills
+        if (m.contains("bill") || m.contains("recharge") || m.contains("airtel") || m.contains("jio")
+                || m.contains("bsnl") || m.contains("vodafone") || m.contains("broadband")
+                || m.contains("hathway") || m.contains("electricity") || m.contains("bescom")
+                || m.contains("water") || m.contains("gas") || m.contains("utility")) {
+            System.out.println("DEBUG: Categorized as Utilities because of string [" + m + "]");
+            return "Utilities";
+        }
+
+        if (m.contains("hospital") || m.contains("pharmacy") || m.contains("medicine") || m.contains("medical")
+                || m.contains("apollo") || m.contains("1mg") || m.contains("pharmeasy") || m.contains("practo")
+                || m.contains("doctor") || m.contains("clinic") || m.contains("lab") || m.contains("diagnostic")
+                || m.contains("health"))
+            return "Health";
+
+        if (m.contains("investment") || m.contains("mutual fund") || m.contains("sip") || m.contains("zerodha")
+                || m.contains("groww") || m.contains("upstox") || m.contains("stock") || m.contains("ppf")
+                || m.contains("lic") || m.contains("insurance") || m.contains("premium") || m.contains("policy"))
+            return "Investment";
+
+        return "General";
+    }
+}

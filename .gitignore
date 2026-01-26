@@ -1,0 +1,16 @@
+# AI Assistant working directory
+.gemini/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.iml
+
+# Build directories
+node_modules/
+build/
+dist/

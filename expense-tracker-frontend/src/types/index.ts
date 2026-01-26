@@ -7,7 +7,7 @@ export interface Expense {
   date: string; // ISO string
   notes?: string;
   source: 'SMS' | 'Mail' | 'Manual';
-  type: 'Purchase' | 'Transfer' | 'Withdrawal' | 'BillPayment';
+  type: 'Purchase' | 'Transfer' | 'Withdrawal' | 'BillPayment' | 'Credited' | 'Debited' | 'Spent';
   user?: { id: string };
 }
 

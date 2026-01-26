@@ -38,16 +38,19 @@ class GmailService {
 
     final gmailApi = GmailApi(authenticateClient);
     
-    // Expanded search query to look in content, not just subject
+    // Calculate timestamp for 24 hours ago (in seconds)
+    final int oneDayAgo = (DateTime.now().millisecondsSinceEpoch ~/ 1000) - (24 * 60 * 60);
+
+    // Updated query: Filter by subject keywords only, strictly after 24 hours ago
     final results = await gmailApi.users.messages.list(
       'me',
-      q: '(transaction OR debit OR spent OR "alert for" OR "vpa debited") after:1d',
+      q: 'subject:(debited OR credited OR spent) after:$oneDayAgo',
     );
 
     if (results.messages == null || results.messages!.isEmpty) return;
 
     for (var messageSummary in results.messages!) {
-      final message = await gmailApi.users.messages.get('me', messageSummary.id!);
+      final message = await gmailApi.users.messages.get('me', messageSummary.id!, format: 'full');
       await _processMessage(message, userId);
     }
   }
@@ -55,94 +58,76 @@ class GmailService {
   Future<void> _processMessage(Message message, String userId) async {
     String? body;
     String subject = "";
+    String sender = "";
     
-    // Extract Subject
+    // Extract headers
     message.payload?.headers?.forEach((header) {
       if (header.name == 'Subject') subject = header.value ?? "";
+      if (header.name == 'From') sender = header.value ?? "";
     });
 
-    // Attempt to extract body
-    if (message.payload?.parts != null) {
-      for (var part in message.payload!.parts!) {
-        if ((part.mimeType == 'text/plain' || part.mimeType == 'text/html') && part.body?.data != null) {
-          body = utf8.decode(base64Url.decode(part.body!.data!));
-          break;
-        }
-      }
-    } else if (message.payload?.body?.data != null) {
-      body = utf8.decode(base64Url.decode(message.payload!.body!.data!));
+    // Extract body
+    // Extract body using recursive helper
+    body = _extractBody(message.payload);
+    
+    // Fallback to snippet if body is empty
+    if (body == null || body.isEmpty) {
+      print("Body missing for ${message.id}, using snippet.");
+      body = message.snippet;
     }
 
-    final combinedText = "$subject ${body ?? ""}";
+    // Combine subject and body to check for patterns
+    final combinedText = "$subject $body";
+    
+    // Strict Regex to match your specific examples:
+    // 1. INR 100.00 was debited...
+    // 2. INR 100.00 was credited...
+    // 3. INR 101722.5 spent on...
+    final strictFilter = RegExp(
+      r"(?:INR|Rs\.?|₹)\s*[\d,.]+\s+(?:was\s+(?:debited|credited)|spent\s+on)", 
+      caseSensitive: false
+    );
 
-    final expense = _parseEmail(combinedText);
-    if (expense != null) {
-      expense['user'] = {'id': userId};
-      expense['source'] = 'Mail';
-      expense['date'] = DateTime.fromMillisecondsSinceEpoch(
+    if (!strictFilter.hasMatch(combinedText)) {
+      print("Skipping email (Pattern mismatch): $subject");
+      return;
+    }
+
+    final emailData = {
+      "user": {"id": userId},
+      "messageId": message.id,
+      "subject": subject,
+      "body": body ?? "",
+      "sender": sender,
+      "receivedAt": DateTime.fromMillisecondsSinceEpoch(
         int.parse(message.internalDate ?? DateTime.now().millisecondsSinceEpoch.toString())
-      ).toIso8601String();
+      ).toIso8601String()
+    };
       
-      try {
-        await _apiService.createExpense(expense);
-        print("Successfully synced expense: ${expense['merchant']} - ${expense['amount']}");
-      } catch (e) {
-        print("Sync error or duplicate: $e");
+    try {
+      await _apiService.saveEmailLog(emailData);
+      print("Successfully synced email: $subject");
+    } catch (e) {
+      print("Error syncing email log: $e");
+    }
+  }
+
+  String? _extractBody(MessagePart? part) {
+    if (part == null) return null;
+
+    if (part.body?.data != null) {
+      if (part.mimeType == 'text/plain' || part.mimeType == 'text/html') {
+        return utf8.decode(base64Url.decode(part.body!.data!));
       }
-    } else {
-      print("Could not parse transaction from email. Subject: $subject");
     }
-  }
 
-  Map<String, dynamic>? _parseEmail(String text) {
-    // Normalize: replace newlines with spaces and condense whitespace
-    final normalized = text.replaceAll(RegExp(r'\s+'), ' ');
-
-    // Pattern 1: Amount ... at/to/at ... Merchant
-    final reg1 = RegExp(r"(?:Debited|Spent|Paid|Alert|vpa debited).*?(?:₹|INR|Rs\.?)\s*([\d,.]+).*?(?:at|to|info:)\s*(.*?)(?:\s+on|\s+using|\s+at|\.|$)", caseSensitive: false);
-    
-    // Pattern 2: Account debited for Amount ... Merchant
-    final reg2 = RegExp(r"debited.*?Rs\.?\s*([\d,.]+).*?info[:\s]+(.*?)(?:\s+on|\s+at|$)", caseSensitive: false);
-
-    // Pattern 3: Transaction of Amount at Merchant
-    final reg3 = RegExp(r"transaction.*?(?:₹|INR|Rs\.?)\s*([\d,.]+).*?at\s+(.*?)(?:\s+on|$)", caseSensitive: false);
-
-    // Pattern 4: [Amount] was debited ... towards [Merchant] (Your specific case)
-    final reg4 = RegExp(r"(?:₹|INR|Rs\.?)\s*([\d,.]+)\s+(?:was\s+)?debited.*?(?:towards|to|at)\s*(.*?)(?:\s+from|\s+on|\s+at|\.|$)", caseSensitive: false);
-
-    final match = reg1.firstMatch(normalized) ?? 
-                  reg2.firstMatch(normalized) ?? 
-                  reg3.firstMatch(normalized) ?? 
-                  reg4.firstMatch(normalized);
-    
-    if (match != null) {
-      final amountStr = match.group(1)?.replaceAll(',', '') ?? '0';
-      final merchantRaw = match.group(2)?.trim() ?? 'Unknown';
-      
-      // Cleanup merchant (remove "your A/c", dates, etc)
-      String merchant = merchantRaw.split(RegExp(r"your A/c|from account", caseSensitive: false))[0].trim();
-      merchant = merchant.replaceAll(RegExp(r'^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$'), '');
-
-      return {
-        "amount": double.tryParse(amountStr) ?? 0.0,
-        "currency": "INR",
-        "merchant": merchant.isEmpty ? "Bank Transaction" : merchant,
-        "category": _categorize(merchant),
-        "type": "Purchase",
-        "notes": "Auto-synced from Email"
-      };
+    if (part.parts != null) {
+      for (final subPart in part.parts!) {
+        final body = _extractBody(subPart);
+        if (body != null) return body;
+      }
     }
+    
     return null;
-  }
-
-  String _categorize(String merchant) {
-    final m = merchant.toLowerCase();
-    if (m.contains('swiggy') || m.contains('zomato') || m.contains('food') || m.contains('restaurant') || m.contains('starbucks')) return 'Food';
-    if (m.contains('uber') || m.contains('ola') || m.contains('petrol') || m.contains('fuel') || m.contains('transport')) return 'Transport';
-    if (m.contains('amazon') || m.contains('flipkart') || m.contains('myntra') || m.contains('shopping')) return 'Shopping';
-    if (m.contains('netflix') || m.contains('spotify') || m.contains('theatre') || m.contains('hotstar')) return 'Entertainment';
-    if (m.contains('bill') || m.contains('recharge') || m.contains('airtel') || m.contains('jio') || m.contains('utility')) return 'Utilities';
-    if (m.contains('hospital') || m.contains('pharmacy') || m.contains('medical')) return 'Health';
-    return 'Travel';
   }
 }

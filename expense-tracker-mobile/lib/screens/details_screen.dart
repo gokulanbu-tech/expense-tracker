@@ -127,13 +127,13 @@ class _DetailsScreenState extends State<DetailsScreen> {
             _buildInfoCard([
               _buildInfoRow(Icons.storefront_outlined, "Merchant", _currentExpense['merchant']),
               const Divider(color: Colors.white12, height: 32),
-              _buildInfoRow(Icons.calendar_today_outlined, "Date", _formatDate(_currentExpense['date'])),
-              const Divider(color: Colors.white12, height: 32),
               _buildInfoRow(Icons.category_outlined, "Category", _currentExpense['category']),
               const Divider(color: Colors.white12, height: 32),
-              _buildInfoRow(Icons.account_balance_wallet_outlined, "Source", _currentExpense['source']),
-              const Divider(color: Colors.white12, height: 32),
               _buildInfoRow(Icons.receipt_long_outlined, "Type", _currentExpense['type']),
+              const Divider(color: Colors.white12, height: 32),
+              _buildInfoRow(Icons.calendar_today_outlined, "Date", _formatDate(_currentExpense['date'])),
+              const Divider(color: Colors.white12, height: 32),
+              _buildInfoRow(Icons.account_balance_wallet_outlined, "Source", _currentExpense['source']),
             ]),
             if (_currentExpense['notes'] != null && _currentExpense['notes'].isNotEmpty) ...[
               const SizedBox(height: 24),
@@ -206,7 +206,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
   String _formatDate(String dateString) {
     try {
       final date = DateTime.parse(dateString);
-      return DateFormat('yMMMMd').format(date);
+      return DateFormat('yMMMMd h:mm a').format(date);
     } catch (e) {
       return dateString;
     }

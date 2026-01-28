@@ -2,12 +2,13 @@ spring:
   application:
     name: expense-tracker-backend
   datasource:
-    url: ${DATABASE_URL}
-    username: ${DATABASE_USERNAME}
-    password: ${DATABASE_PASSWORD}
-    driver-class-name: org.postgresql.Driver
+
+    url: jdbc:sqlite:expense-tracker.db
+    driver-class-name: org.sqlite.JDBC
+    username: sa
+    password: password
   jpa:
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    database-platform: org.hibernate.community.dialect.SQLiteDialect
     hibernate:
       ddl-auto: update
     show-sql: true

@@ -19,12 +19,12 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   final _notesController = TextEditingController();
   
   String _selectedCategory = 'Food';
-  String _selectedType = 'Purchase';
+  String _selectedType = 'Spent';
   DateTime _selectedDate = DateTime.now();
   bool _isLoading = false;
 
   final List<String> _categories = ['Food', 'Transport', 'Utilities', 'Shopping', 'Entertainment', 'Health', 'Travel'];
-  final List<String> _types = ['Purchase', 'Transfer', 'Withdrawal', 'BillPayment'];
+  final List<String> _types = ['Spent', 'Credited', 'Debited'];
 
   @override
   void initState() {
@@ -33,8 +33,18 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       _amountController.text = widget.expense!['amount'].toString();
       _merchantController.text = widget.expense!['merchant'] ?? "";
       _notesController.text = widget.expense!['notes'] ?? "";
-      _selectedCategory = widget.expense!['category'] ?? 'Food';
-      _selectedType = widget.expense!['type'] ?? 'Purchase';
+      String category = widget.expense!['category'] ?? 'Food';
+      if (!_categories.contains(category)) {
+        category = 'Food'; // Fallback if category not found in list
+      }
+      _selectedCategory = category;
+      
+      String type = widget.expense!['type'] ?? 'Spent';
+      if (!_types.contains(type)) {
+         type = 'Spent';
+      }
+      _selectedType = type;
+      
       _selectedDate = DateTime.parse(widget.expense!['date']);
     } else {
       _selectedDate = DateTime.now();
@@ -135,22 +145,22 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               ],
             ),
             const SizedBox(height: 32),
-            _buildSectionTitle("Transaction Type"),
+            _buildSectionTitle("Category"),
             const SizedBox(height: 12),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
-                children: _types.map((type) => Padding(
+                children: _categories.map((cat) => Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: ChoiceChip(
-                    label: Text(type),
-                    selected: _selectedType == type,
+                    label: Text(cat),
+                    selected: _selectedCategory == cat,
                     onSelected: (selected) {
-                      if (selected) setState(() => _selectedType = type);
+                      if (selected) setState(() => _selectedCategory = cat);
                     },
                     selectedColor: const Color(0xFF6366F1),
                     backgroundColor: const Color(0xFF1E293B),
-                    labelStyle: TextStyle(color: _selectedType == type ? Colors.white : Colors.grey, fontWeight: FontWeight.bold),
+                    labelStyle: TextStyle(color: _selectedCategory == cat ? Colors.white : Colors.grey, fontWeight: FontWeight.bold),
                   ),
                 )).toList(),
               ),
@@ -158,7 +168,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
             const SizedBox(height: 24),
             _buildTextField("Merchant / Title", _merchantController, Icons.storefront_outlined),
             const SizedBox(height: 24),
-            _buildCategoryPicker(),
+            _buildTypePicker(),
             const SizedBox(height: 24),
             _buildDatePicker(),
             const SizedBox(height: 24),
@@ -212,11 +222,11 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     );
   }
 
-  Widget _buildCategoryPicker() {
+  Widget _buildTypePicker() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle("Category"),
+        _buildSectionTitle("Type"),
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -226,17 +236,17 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
-              value: _selectedCategory,
+              value: _selectedType,
               dropdownColor: const Color(0xFF0F172A),
               icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
               isExpanded: true,
               style: const TextStyle(color: Colors.white),
-              items: _categories.map((cat) => DropdownMenuItem(
-                value: cat,
-                child: Text(cat),
+              items: _types.map((type) => DropdownMenuItem(
+                value: type,
+                child: Text(type),
               )).toList(),
               onChanged: (val) {
-                if (val != null) setState(() => _selectedCategory = val);
+                if (val != null) setState(() => _selectedType = val);
               },
             ),
           ),
@@ -249,17 +259,46 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle("Date"),
+        _buildSectionTitle("Date & Time"),
         const SizedBox(height: 8),
         InkWell(
           onTap: () async {
-            final picked = await showDatePicker(
+            final pickedDate = await showDatePicker(
               context: context,
               initialDate: _selectedDate,
               firstDate: DateTime(2000),
               lastDate: DateTime.now(),
             );
-            if (picked != null) setState(() => _selectedDate = picked);
+            
+            if (pickedDate != null && mounted) {
+              // 1. First capture the date choice, preserving current time temporarily
+              DateTime finalDateTime = DateTime(
+                pickedDate.year,
+                pickedDate.month,
+                pickedDate.day,
+                _selectedDate.hour,
+                _selectedDate.minute,
+              );
+              
+              // 2. Then ask for time
+              final pickedTime = await showTimePicker(
+                context: context,
+                initialTime: TimeOfDay.fromDateTime(_selectedDate),
+              );
+              
+              // 3. If time was picked, update only the time part
+              if (pickedTime != null) {
+                finalDateTime = DateTime(
+                  pickedDate.year,
+                  pickedDate.month,
+                  pickedDate.day,
+                  pickedTime.hour,
+                  pickedTime.minute,
+                );
+              }
+              
+              setState(() => _selectedDate = finalDateTime);
+            }
           },
           child: Container(
             padding: const EdgeInsets.all(16),
@@ -272,7 +311,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 const Icon(Icons.calendar_today_outlined, color: Colors.indigoAccent),
                 const SizedBox(width: 12),
                 Text(
-                  DateFormat('yMMMMd').format(_selectedDate),
+                  DateFormat('yMMMMd h:mm a').format(_selectedDate),
                   style: const TextStyle(color: Colors.white),
                 ),
               ],

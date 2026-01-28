@@ -16,7 +16,7 @@ void main() async {
   await userProvider.tryAutoLogin();
 
   final smsService = SmsService();
-  smsService.initialize();
+  // smsService.initialize();
 
   runApp(
     MultiProvider(

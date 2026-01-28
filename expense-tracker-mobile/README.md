@@ -33,6 +33,14 @@ flutter run
 *   **Gmail Sync**: Uses Google APIs to securely fetch transaction emails.
 *   **Offline Mode**: View cached data even without internet (synced when online).
 
+## 💳 Bill Management
+*   **Recurring Bills**: Track monthly/weekly/yearly subscriptions and utility bills.
+*   **Smart Editing**: Update bill details (amount, date, note) or delete them entirely.
+*   **Payment Tracking**: 
+    *   Mark bills as paid manually.
+    *   **Logic**: Prevents marking as paid *before* the due date to avoid errors.
+    *   **Auto-Advance**: Paying a bill automatically resets the due date to the next cycle.
+
 ## 📱 Build for Release
 
 ### Android (APK / Bundle)

@@ -88,6 +88,14 @@ To switch to PostgreSQL for production:
 | :--- | :--- | :--- |
 | `GET` | `/api/bills` | List upcoming bills |
 | `POST` | `/api/bills` | Add a recurring bill |
+| `PUT` | `/api/bills/{id}` | Update bill details |
+| `DELETE` | `/api/bills/{id}` | Delete a recurring bill |
+| `POST` | `/api/bills/{id}/pay` | Manually mark a bill as paid (advances due date) |
+
+> **Note**: The system also includes an **Auto-Pay Engine** that:
+> 1.  Automatically detects recurring bills from email patterns.
+> 2.  Matches incoming expenses to existing bills to mark them as paid.
+> 3.  Manages recurrence by automatically advancing the due date upon payment.
 
 ---
 

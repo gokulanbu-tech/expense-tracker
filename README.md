@@ -69,7 +69,10 @@ flutter run
 ### 💰 Core Functionality
 *   **Automated Tracking**: Parses bank emails (Gmail) and SMS (Android) to auto-log expenses.
 *   **Manual Entry**: Quick-add interface for cash transactions.
-*   **Bill Reminders**: Track upcoming utility bills and subscriptions.
+*   **Smart Bill Management**: 
+    *   Track recurring subscriptions and utilities.
+    *   Auto-pay detection logic that links expenses to bills.
+    *   Full lifecycle management (Create, Edit, Delete, Mark as Paid).
 
 ### 📊 Analytics
 *   **Interactive Dashboard**: Visualize spending by category or timeframe (Daily/Weekly/Monthly).

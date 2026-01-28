@@ -19,14 +19,30 @@ public class Bill {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    private String title;
+    @Column(nullable = false)
+    private String merchant;
+
+    @Column(nullable = false)
+    private String category;
+
+    private String note;
+
+    @Column(nullable = false)
+    private String type = "Debit";
+
+    @Column(name = "amount", nullable = false)
     private BigDecimal amount;
 
-    @Column(name = "due_date")
+    @Column(name = "due_date", nullable = false)
     private LocalDateTime dueDate;
 
     @Column(name = "is_paid")
     private Boolean isPaid = false;
+
+    private LocalDateTime lastPaidDate;
+
+    @Column(name = "frequency")
+    private String frequency = "MONTHLY"; // Default to monthly for recurring bills
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")

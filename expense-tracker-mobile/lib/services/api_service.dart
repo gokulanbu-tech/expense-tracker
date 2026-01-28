@@ -156,4 +156,49 @@ class ApiService {
       throw Exception("Failed to sync email log: ${response.body}");
     }
   }
+  Future<List<dynamic>> getBills(String userId) async {
+    final response = await http.get(Uri.parse("$baseUrl/bills?userId=$userId"));
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception("Failed to load bills");
+    }
+  }
+
+  Future<void> createBill(Map<String, dynamic> billData) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/bills"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode(billData),
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception("Failed to create bill: ${response.body}");
+    }
+  }
+
+  Future<void> markBillAsPaid(String id) async {
+    final response = await http.put(Uri.parse("$baseUrl/bills/$id/pay"));
+    if (response.statusCode != 200) {
+      throw Exception("Failed to mark bill as paid");
+    }
+  }
+
+  Future<void> deleteBillBackend(String id) async {
+    final response = await http.delete(Uri.parse("$baseUrl/bills/$id"));
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception("Failed to delete bill");
+    }
+  }
+  Future<void> updateBill(String id, Map<String, dynamic> billData) async {
+    final response = await http.put(
+      Uri.parse("$baseUrl/bills/$id"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode(billData),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception("Failed to update bill: ${response.body}");
+    }
+  }
 }

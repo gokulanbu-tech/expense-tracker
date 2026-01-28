@@ -7,4 +7,11 @@ import java.util.List;
 
 public interface ExpenseRepository extends JpaRepository<Expense, UUID> {
     List<Expense> findByUserId(UUID userId);
+
+    List<Expense> findByUserIdAndMerchantAndAmountAndDateBetween(
+            UUID userId,
+            String merchant,
+            java.math.BigDecimal amount,
+            java.time.LocalDateTime startDate,
+            java.time.LocalDateTime endDate);
 }

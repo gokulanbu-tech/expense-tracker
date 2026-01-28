@@ -9,6 +9,7 @@ import 'package:expense_tracker_mobile/screens/profile_screen.dart';
 import 'package:expense_tracker_mobile/screens/all_expenses_screen.dart';
 import 'package:expense_tracker_mobile/screens/stats_screen.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:expense_tracker_mobile/screens/wallet_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -116,7 +117,7 @@ class _HomeScreenState extends State<HomeScreen> {
         index: _currentIndex,
         children: [
           _buildDashboard(user),
-          const Center(child: Text("Wallet - Coming Soon", style: TextStyle(color: Colors.white))),
+          const WalletScreen(),
           const SizedBox.shrink(), // Center button placeholder
           const SuggestionsScreen(),
           const ProfileScreen(),
@@ -141,7 +142,7 @@ class _HomeScreenState extends State<HomeScreen> {
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.grid_view_rounded), label: "Dash"),
-          BottomNavigationBarItem(icon: Icon(Icons.account_balance_wallet_outlined), label: "Wallet"),
+          BottomNavigationBarItem(icon: Icon(Icons.account_balance_wallet_outlined), label: "Bills"),
           BottomNavigationBarItem(icon: Icon(Icons.add_box_rounded, size: 40), label: ""),
           BottomNavigationBarItem(icon: Icon(Icons.bar_chart_rounded), label: "Stats"),
           BottomNavigationBarItem(icon: Icon(Icons.person_outline_rounded), label: "Profile"),

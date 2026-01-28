@@ -317,7 +317,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            if (_allExpenses.isNotEmpty)
+            if (_filteredExpenses.isNotEmpty)
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -339,7 +339,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
-            if (_allExpenses.isNotEmpty && _selectedTimeframe != 'Daily')
+            if (_filteredExpenses.isNotEmpty && _selectedTimeframe != 'Daily')
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
@@ -462,7 +462,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildPieChart() {
     final Map<String, double> categoryData = {};
-    for (var expense in _allExpenses) {
+    for (var expense in _filteredExpenses) {
       if (expense['type']?.toString().toLowerCase() == 'credited') continue;
       final category = expense['category'] ?? 'Other';
       categoryData[category] = (categoryData[category] ?? 0) + (expense['amount'] as num).toDouble();
@@ -491,7 +491,7 @@ class _HomeScreenState extends State<HomeScreen> {
     Map<int, double> timeData = {};
     int maxKey = 0;
     
-    for (var expense in _allExpenses) {
+    for (var expense in _filteredExpenses) {
       if (expense['type']?.toString().toLowerCase() == 'credited') continue;
       
       final date = DateTime.parse(expense['date']);
@@ -602,7 +602,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildChartLegend() {
     final Map<String, double> categoryData = {};
-    for (var expense in _allExpenses) {
+    for (var expense in _filteredExpenses) {
       if (expense['type']?.toString().toLowerCase() == 'credited') continue;
       final category = expense['category'] ?? 'Other';
       categoryData[category] = (categoryData[category] ?? 0) + (expense['amount'] as num).toDouble();

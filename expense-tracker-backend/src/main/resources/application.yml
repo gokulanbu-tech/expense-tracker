@@ -2,18 +2,10 @@ spring:
   application:
     name: expense-tracker-backend
   datasource:
-<<<<<<< HEAD
-
-    url: jdbc:sqlite:expense-tracker.db
-    driver-class-name: org.sqlite.JDBC
-    username: sa
-    password: password
-=======
     url: ${DATABASE_URL}
     username: ${DATABASE_USERNAME}
     password: ${DATABASE_PASSWORD}
     driver-class-name: org.postgresql.Driver
->>>>>>> origin/main
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:

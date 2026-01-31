@@ -113,7 +113,7 @@ class _BillDetailsScreenState extends State<BillDetailsScreen> {
   Widget build(BuildContext context) {
     // Parse Date
     final DateTime dueDate = _bill.dueDate;
-    final DateTime? lastPaidDate = _bill.lastPaidDate != null && _bill.lastPaidDate!.isNotEmpty ? DateTime.parse(_bill.lastPaidDate!) : null;
+    final DateTime? lastPaidDate = _bill.lastPaidDate;
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final dueDay = DateTime(dueDate.year, dueDate.month, dueDate.day);

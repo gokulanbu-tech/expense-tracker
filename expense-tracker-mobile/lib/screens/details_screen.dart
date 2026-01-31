@@ -115,7 +115,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    "₹ ${_currentExpense.amount.toStringAsFixed(2)}",
+                    "${_currentExpense.currencySymbol} ${_currentExpense.amount.toStringAsFixed(2)}",
                     style: TextStyle(
                       color: _currentExpense.type == 'Credited' ? const Color(0xFF10B981) : Colors.white,
                       fontSize: 48,

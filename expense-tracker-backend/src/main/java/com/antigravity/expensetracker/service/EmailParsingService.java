@@ -22,21 +22,68 @@ public class EmailParsingService {
     @Autowired
     private com.antigravity.expensetracker.repository.BillRepository billRepository;
 
+    @Autowired
+    private com.antigravity.expensetracker.controller.EmailParsingController emailParsingController;
+
     public void parseAndCreateExpense(EmailLog emailLog) {
         String rawSubject = emailLog.getSubject();
         String rawBody = emailLog.getBody();
         String normalizedSubject = rawSubject.replace('\u00A0', ' ').replaceAll("\\s+", " ");
+        String extractionMethod = "Open AI";
 
         System.out.println("DEBUG Parsing Subject: [" + normalizedSubject + "]");
 
-        Expense expense = extractExpense(normalizedSubject, rawBody);
+        Expense expense = null;
+
+        // 1. Primary Method: Gemini API
+        try {
+            com.antigravity.expensetracker.dto.EmailParseRequest request = new com.antigravity.expensetracker.dto.EmailParseRequest();
+            request.setSubject(normalizedSubject);
+            request.setBody(rawBody);
+            request.setSender(emailLog.getSender());
+
+            org.springframework.http.ResponseEntity<com.antigravity.expensetracker.dto.ExpenseExtractionResponse> response = emailParsingController
+                    .parseEmail(request);
+
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null
+                    && !response.getBody().isError()) {
+                com.antigravity.expensetracker.dto.ExpenseExtractionResponse aiBody = response.getBody();
+                expense = new Expense();
+                expense.setAmount(aiBody.getAmount());
+                expense.setMerchant(aiBody.getMerchant() != null ? aiBody.getMerchant() : "Unknown");
+                expense.setCategory(aiBody.getCategory() != null ? aiBody.getCategory() : "General");
+                expense.setType(aiBody.getType() != null ? aiBody.getType() : "Spent"); // Default, unless we improve AI
+                                                                                        // to detect credit
+                expense.setNotes(aiBody.getNotes() != null ? aiBody.getNotes() : "Parsed by Gemini AI");
+                expense.setCurrency(aiBody.getCurrency() != null ? aiBody.getCurrency() : "INR");
+
+                System.out.println("Open API extracted expense: " + expense);
+                // If AI returns null amount, consider it a failure and fallback
+                if (expense.getAmount() == null) {
+                    throw new Exception("Open returned null amount");
+                }
+            } else {
+                throw new Exception("Open API returned error status or empty body");
+            }
+        } catch (Exception e) {
+            System.out.println("Open API extraction failed (" + e.getMessage() + "). Falling back to regex.");
+            extractionMethod = "Regex Fallback";
+            // 2. Fallback Method: Regex
+            expense = extractExpense(normalizedSubject, rawBody);
+            System.out.println("Regex extracted expense: " + expense);
+        }
 
         if (expense != null) {
             expense.setUser(emailLog.getUser());
-            expense.setSource("Mail");
+            expense.setSource("Mail (" + extractionMethod + ")");
             expense.setDate(emailLog.getReceivedAt());
+
+            // Currency conversion removed by user request (static fallback on frontend)
+            // expense.setAmountInInr(...);
+
             expenseRepository.save(expense);
-            System.out.println("Parsed and saved expense: " + expense.getAmount() + " for " + expense.getMerchant());
+            System.out.println("Parsed and saved expense via " + extractionMethod + ": " + expense.getAmount() + " for "
+                    + expense.getMerchant());
 
             // 1. Try to pay an existing bill
             boolean matched = billService.processExpenseForBillPayment(expense);

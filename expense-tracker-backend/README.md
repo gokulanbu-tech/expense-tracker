@@ -65,6 +65,14 @@ To switch to PostgreSQL for production:
         password: ${DATABASE_PASSWORD}
     ```
 
+
+
+---
+
+## 💰 Currency Handling
+*   **Storage**: Expenses are stored with their **original currency code** (e.g., USD, EUR, INR) and amount. 
+*   **Logic**: The backend does NOT perform currency conversion. It serves raw data to clients. All conversion logic (e.g., for aggregate charts) is offloaded to the frontend (Static Map strategy) to ensure simplicity and reliability without dependence on external exchange rate APIs.
+
 ---
 
 ## 🔑 Key API Endpoints

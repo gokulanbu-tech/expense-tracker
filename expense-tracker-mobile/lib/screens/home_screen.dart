@@ -97,7 +97,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _totalIncome = 0;
       
       for (var item in _filteredExpenses) {
-        final amount = item.amount;
+        final amount = _getInrAmount(item);
         final type = item.type.toLowerCase();
         
         if (type == 'credited') {
@@ -373,13 +373,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     TextButton(
-                      onPressed: () {
-                        Navigator.push(
+                      onPressed: () async {
+                        final updated = await Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => AllExpensesScreen(expenses: _filteredExpenses),
                           ),
                         );
+                        if (updated == true) _fetchExpenses();
                       },
                       child: const Text("See All"),
                     ),
@@ -442,7 +443,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                             Text(
-                              "${(expense.type.toLowerCase() == 'credited') ? '+' : '-'} ₹ ${expense.amount}",
+                              "${(expense.type.toLowerCase() == 'credited') ? '+' : '-'} ${expense.currencySymbol} ${expense.amount}",
                               style: TextStyle(
                                 color: (expense.type.toLowerCase() == 'credited') ? const Color(0xFF10B981) : Colors.redAccent,
                                 fontWeight: FontWeight.bold
@@ -468,7 +469,7 @@ class _HomeScreenState extends State<HomeScreen> {
     for (var expense in _filteredExpenses) {
       if (expense.type.toLowerCase() == 'credited') continue;
       final category = expense.category;
-      categoryData[category] = (categoryData[category] ?? 0) + expense.amount;
+      categoryData[category] = (categoryData[category] ?? 0) + _getInrAmount(expense);
     }
 
     final sections = categoryData.entries.map((entry) {
@@ -511,7 +512,7 @@ class _HomeScreenState extends State<HomeScreen> {
         maxKey = 12;
       }
       
-      timeData[key] = (timeData[key] ?? 0) + expense.amount;
+      timeData[key] = (timeData[key] ?? 0) + _getInrAmount(expense);
     }
 
     // 2. Prepare Spots
@@ -608,7 +609,7 @@ class _HomeScreenState extends State<HomeScreen> {
     for (var expense in _filteredExpenses) {
       if (expense.type.toLowerCase() == 'credited') continue;
       final category = expense.category;
-      categoryData[category] = (categoryData[category] ?? 0) + expense.amount;
+      categoryData[category] = (categoryData[category] ?? 0) + _getInrAmount(expense);
     }
 
     final totalAll = categoryData.values.fold(0.0, (sum, val) => sum + val);
@@ -670,6 +671,14 @@ class _HomeScreenState extends State<HomeScreen> {
       case 'Travel': return const Color(0xFF06B6D4);
       default: return Colors.grey;
     }
+  }
+
+  double _getInrAmount(Expense e) {
+    if (e.currency == 'INR') return e.amount;
+    if (e.currency == 'USD') return e.amount * 87.0;
+    if (e.currency == 'EUR') return e.amount * 92.0;
+    if (e.currency == 'GBP') return e.amount * 110.0;
+    return e.amount;
   }
 
   IconData _getIconForCategory(String? category) {

@@ -84,7 +84,7 @@ class GmailService {
     // 2. INR 100.00 was credited...
     // 3. INR 101722.5 spent on...
     final strictFilter = RegExp(
-      r"(?:INR|Rs\.?|₹)\s*[\d,.]+\s+(?:was\s+(?:debited|credited)|spent\s+on)", 
+      r"(?:[A-Z]{3}|Rs\.?|₹)\s*[\d,.]+\s+(?:was\s+(?:debited|credited)|spent\s+on)", 
       caseSensitive: false
     );
 

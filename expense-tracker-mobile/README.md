@@ -33,6 +33,13 @@ flutter run
 *   **Gmail Sync**: Uses Google APIs to securely fetch transaction emails.
 *   **Offline Mode**: View cached data even without internet (synced when online).
 
+## 💰 Financial Tracking Features
+*   **Multi-Currency**: Supports manual entry of expenses in **INR, USD, EUR, GBP, JPY**.
+*   **Smart Dashboard**:
+    *   Aggregates total spending in INR (Home Currency).
+    *   Uses static conversion rates for instant analysis (Rules: USD=87, EUR=92, GBP=110, JPY=0.6).
+    *   Lists display original currency symbols for accuracy.
+
 ## 💳 Bill Management
 *   **Recurring Bills**: Track monthly/weekly/yearly subscriptions and utility bills.
 *   **Smart Editing**: Update bill details (amount, date, note) or delete them entirely.

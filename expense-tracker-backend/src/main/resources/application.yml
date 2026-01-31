@@ -16,3 +16,7 @@ spring:
   jackson:
     serialization:
       write-dates-as-timestamps: false
+
+openai:
+  api:
+    key: ${OPENAI_API_KEY}

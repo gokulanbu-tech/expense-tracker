@@ -9,6 +9,7 @@ class Expense {
   final String source;
   final String type;
   final String? notes;
+
   final String? userId;
 
   Expense({
@@ -22,6 +23,7 @@ class Expense {
     required this.type,
     this.notes,
     this.userId,
+
   });
 
   factory Expense.fromJson(Map<String, dynamic> json) {
@@ -36,6 +38,7 @@ class Expense {
       type: json['type'] ?? 'Purchase',
       notes: json['notes'],
       userId: json['userId'],
+
     );
   }
 
@@ -51,6 +54,19 @@ class Expense {
       'type': type,
       'notes': notes,
       'userId': userId,
+
     };
   }
+  static String getCurrencySymbol(String currencyCode) {
+    switch (currencyCode.toUpperCase()) {
+      case 'USD': return '\$';
+      case 'EUR': return '€';
+      case 'GBP': return '£';
+      case 'JPY': return '¥';
+      case 'INR': return '₹';
+      default: return currencyCode;
+    }
+  }
+
+  String get currencySymbol => getCurrencySymbol(currency);
 }

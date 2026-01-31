@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 import 'package:expense_tracker_mobile/providers/user_provider.dart';
 import 'package:expense_tracker_mobile/services/api_service.dart';
 
+import 'package:expense_tracker_mobile/models/expense_model.dart';
+
 class AddExpenseScreen extends StatefulWidget {
   final Map<String, dynamic>? expense;
 
@@ -26,6 +28,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   final List<String> _categories = ['Food', 'Transport', 'Utilities', 'Shopping', 'Entertainment', 'Health', 'Travel'];
   final List<String> _types = ['Spent', 'Credited', 'Debited'];
 
+  String _selectedCurrency = 'INR';
+
   @override
   void initState() {
     super.initState();
@@ -33,6 +37,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       _amountController.text = widget.expense!['amount'].toString();
       _merchantController.text = widget.expense!['merchant'] ?? "";
       _notesController.text = widget.expense!['notes'] ?? "";
+      _selectedCurrency = widget.expense!['currency'] ?? 'INR';
+      
       String category = widget.expense!['category'] ?? 'Food';
       if (!_categories.contains(category)) {
         category = 'Food'; // Fallback if category not found in list
@@ -66,14 +72,14 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
       final expenseData = {
         "amount": double.parse(_amountController.text),
-        "currency": "INR",
+        "currency": _selectedCurrency,
         "merchant": _merchantController.text,
         "category": _selectedCategory,
         "type": _selectedType,
         "date": _selectedDate.toIso8601String(),
         "source": widget.expense?['source'] ?? "Manual",
         "notes": _notesController.text,
-        "user": {"id": user?['id']}
+        "user": {"id": user?.id}
       };
 
       if (widget.expense != null) {
@@ -95,6 +101,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       if (mounted) setState(() => _isLoading = false);
     }
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -124,11 +132,24 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const Text(
-                  "₹",
-                  style: TextStyle(color: Colors.white, fontSize: 40, fontWeight: FontWeight.bold),
+                DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: _selectedCurrency,
+                    dropdownColor: const Color(0xFF1E293B),
+                    icon: const Icon(Icons.keyboard_arrow_down, color: Colors.indigoAccent),
+                    style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                    items: ['INR', 'USD', 'EUR', 'GBP', 'JPY'].map((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(Expense.getCurrencySymbol(value)),
+                      );
+                    }).toList(),
+                    onChanged: (newValue) {
+                      if (newValue != null) setState(() => _selectedCurrency = newValue);
+                    },
+                  ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
                 Expanded(
                   child: TextField(
                     controller: _amountController,

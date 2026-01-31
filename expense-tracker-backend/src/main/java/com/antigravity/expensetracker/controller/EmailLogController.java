@@ -42,33 +42,44 @@ public class EmailLogController {
             }
 
             if (emailLogRepository.existsByMessageId(messageId)) {
+                System.out.println("Duplicate messageId ignored: " + messageId);
                 return ResponseEntity.ok().body("Duplicate email ignored: " + messageId);
+            }
+
+            String sender = (String) payload.get("sender");
+            String subject = (String) payload.get("subject");
+
+            String dateStr = (String) payload.get("receivedAt");
+            LocalDateTime receivedAt;
+            if (dateStr != null) {
+                try {
+                    // Handle ends with Z or has offset
+                    if (dateStr.endsWith("Z")) {
+                        receivedAt = java.time.ZonedDateTime.parse(dateStr).toLocalDateTime();
+                    } else {
+                        receivedAt = LocalDateTime.parse(dateStr);
+                    }
+                } catch (Exception e) {
+                    // Fallback for date parsing error
+                    System.out.println("Date parse error: " + e.getMessage());
+                    receivedAt = LocalDateTime.now();
+                }
+            } else {
+                receivedAt = LocalDateTime.now();
+            }
+
+            if (emailLogRepository.existsBySenderAndSubjectAndReceivedAt(sender, subject, receivedAt)) {
+                System.out.println("Duplicate match found for: " + subject);
+                return ResponseEntity.ok().body("Duplicate email ignored (content match): " + subject);
             }
 
             EmailLog emailLog = new EmailLog();
             emailLog.setUser(user);
             emailLog.setMessageId(messageId);
-            emailLog.setSubject((String) payload.get("subject"));
+            emailLog.setSubject(subject);
             emailLog.setBody((String) payload.get("body"));
-            emailLog.setSender((String) payload.get("sender"));
-
-            String dateStr = (String) payload.get("receivedAt");
-            if (dateStr != null) {
-                try {
-                    // Handle ends with Z or has offset
-                    if (dateStr.endsWith("Z")) {
-                        emailLog.setReceivedAt(java.time.ZonedDateTime.parse(dateStr).toLocalDateTime());
-                    } else {
-                        emailLog.setReceivedAt(LocalDateTime.parse(dateStr));
-                    }
-                } catch (Exception e) {
-                    // Fallback for date parsing error
-                    System.out.println("Date parse error: " + e.getMessage());
-                    emailLog.setReceivedAt(LocalDateTime.now());
-                }
-            } else {
-                emailLog.setReceivedAt(LocalDateTime.now());
-            }
+            emailLog.setSender(sender);
+            emailLog.setReceivedAt(receivedAt);
 
             EmailLog savedLog = emailLogRepository.save(emailLog);
 

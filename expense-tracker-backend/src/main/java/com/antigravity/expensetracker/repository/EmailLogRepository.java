@@ -9,4 +9,6 @@ public interface EmailLogRepository extends JpaRepository<EmailLog, UUID> {
     List<EmailLog> findByUserId(UUID userId);
 
     boolean existsByMessageId(String messageId);
+
+    boolean existsBySenderAndSubjectAndReceivedAt(String sender, String subject, java.time.LocalDateTime receivedAt);
 }

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:expense_tracker_mobile/screens/details_screen.dart';
+import 'package:expense_tracker_mobile/models/expense_model.dart';
 
 class AllExpensesScreen extends StatelessWidget {
-  final List<dynamic> expenses;
+  final List<Expense> expenses;
 
   const AllExpensesScreen({super.key, required this.expenses});
 
@@ -51,7 +52,7 @@ class AllExpensesScreen extends StatelessWidget {
                             color: Colors.indigo.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Icon(_getIconForCategory(expense['category']), color: Colors.indigoAccent),
+                          child: Icon(_getIconForCategory(expense.category), color: Colors.indigoAccent),
                         ),
                         const SizedBox(width: 16),
                         Expanded(
@@ -59,11 +60,11 @@ class AllExpensesScreen extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                expense['merchant'] ?? "Unknown",
+                                expense.merchant,
                                 style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                               ),
                               Text(
-                                _formatDate(expense['date']),
+                                _formatDate(expense.date),
                                 style: const TextStyle(color: Colors.grey, fontSize: 12),
                               ),
                             ],
@@ -73,9 +74,9 @@ class AllExpensesScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Text(
-                              "${(expense['type'].toString().toLowerCase() == 'credited') ? '+' : '-'} ₹ ${expense['amount']}",
+                              "${(expense.type.toLowerCase() == 'credited') ? '+' : '-'} ₹ ${expense.amount}",
                               style: TextStyle(
-                                color: (expense['type'].toString().toLowerCase() == 'credited')
+                                color: (expense.type.toLowerCase() == 'credited')
                                     ? const Color(0xFF10B981)
                                     : Colors.redAccent,
                                 fontWeight: FontWeight.bold,
@@ -83,7 +84,7 @@ class AllExpensesScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 4),
                              Text(
-                                expense['category'] ?? "General",
+                                expense.category,
                                 style: const TextStyle(color: Colors.grey, fontSize: 12),
                               ),
                           ],
@@ -110,12 +111,7 @@ class AllExpensesScreen extends StatelessWidget {
     }
   }
 
-  String _formatDate(String dateString) {
-    try {
-      final date = DateTime.parse(dateString);
-      return DateFormat('MMM d, y').format(date);
-    } catch (e) {
-      return dateString;
-    }
+  String _formatDate(DateTime date) {
+    return DateFormat('MMM d, y').format(date);
   }
 }

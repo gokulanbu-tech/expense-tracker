@@ -22,10 +22,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     super.initState();
     final user = context.read<UserProvider>().user;
     if (user != null) {
-      _firstNameController.text = user['firstName'] ?? "";
-      _lastNameController.text = user['lastName'] ?? "";
-      _emailController.text = user['email'] ?? "";
-      _budgetController.text = (user['monthlyBudget'] ?? 0.0).toString();
+      _firstNameController.text = user.firstName;
+      _lastNameController.text = user.lastName;
+      _emailController.text = user.email;
+      _budgetController.text = user.monthlyBudget.toString();
     }
   }
 
@@ -45,19 +45,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       final user = context.read<UserProvider>().user;
       final api = context.read<ApiService>();
       
-      final updatedUser = await api.updateUser(user?['id'], {
-        "firstName": _firstNameController.text,
-        "lastName": _lastNameController.text,
-        "email": _emailController.text,
-        "monthlyBudget": double.parse(_budgetController.text),
-      });
-      
-      if (mounted) {
-        context.read<UserProvider>().setUser(updatedUser);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Profile updated successfully!")),
-        );
-        Navigator.pop(context);
+      if (user != null) {
+        final updatedUser = await api.updateUser(user.id, {
+          "firstName": _firstNameController.text,
+          "lastName": _lastNameController.text,
+          "email": _emailController.text,
+          "monthlyBudget": double.parse(_budgetController.text),
+        });
+        
+        if (mounted) {
+          context.read<UserProvider>().setUser(updatedUser);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Profile updated successfully!")),
+          );
+          Navigator.pop(context);
+        }
       }
     } catch (e) {
       if (mounted) {

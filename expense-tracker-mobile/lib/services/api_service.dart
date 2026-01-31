@@ -1,5 +1,8 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../models/user_model.dart';
+import '../models/expense_model.dart';
+import '../models/bill_model.dart';
 
 class ApiService {
   // Use 10.0.2.2 for Android Emulator to reach localhost
@@ -17,7 +20,7 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> login(String mobile, String password) async {
+  Future<User> login(String mobile, String password) async {
     final response = await http.post(
       Uri.parse("$baseUrl/auth/login"),
       headers: {"Content-Type": "application/json"},
@@ -28,13 +31,13 @@ class ApiService {
     );
 
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      return User.fromJson(jsonDecode(response.body));
     } else {
       throw Exception("Login failed");
     }
   }
 
-  Future<Map<String, dynamic>> loginWithGoogle(String email, String firstName, String lastName) async {
+  Future<User> loginWithGoogle(String email, String firstName, String lastName) async {
     final response = await http.post(
       Uri.parse("$baseUrl/auth/google-login"),
       headers: {"Content-Type": "application/json"},
@@ -46,7 +49,7 @@ class ApiService {
     );
 
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      return User.fromJson(jsonDecode(response.body));
     } else {
       throw Exception("Google login failed");
     }
@@ -64,10 +67,11 @@ class ApiService {
     }
   }
 
-  Future<List<dynamic>> getExpenses(String userId) async {
+  Future<List<Expense>> getExpenses(String userId) async {
     final response = await http.get(Uri.parse("$baseUrl/expenses?userId=$userId"));
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      List<dynamic> body = jsonDecode(response.body);
+      return body.map((dynamic item) => Expense.fromJson(item)).toList();
     } else {
       throw Exception("Failed to load expenses");
     }
@@ -97,7 +101,7 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> updateUser(String? id, Map<String, dynamic> userData) async {
+  Future<User> updateUser(String? id, Map<String, dynamic> userData) async {
     if (id == null || id.isEmpty) {
       throw Exception("User ID is missing. Please restart the app and login again.");
     }
@@ -109,7 +113,7 @@ class ApiService {
     );
 
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      return User.fromJson(jsonDecode(response.body));
     } else {
       throw Exception("Failed to update profile: ${response.body}");
     }
@@ -156,10 +160,11 @@ class ApiService {
       throw Exception("Failed to sync email log: ${response.body}");
     }
   }
-  Future<List<dynamic>> getBills(String userId) async {
+  Future<List<Bill>> getBills(String userId) async {
     final response = await http.get(Uri.parse("$baseUrl/bills?userId=$userId"));
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      List<dynamic> body = jsonDecode(response.body);
+      return body.map((dynamic item) => Bill.fromJson(item)).toList();
     } else {
       throw Exception("Failed to load bills");
     }
@@ -202,3 +207,4 @@ class ApiService {
     }
   }
 }
+

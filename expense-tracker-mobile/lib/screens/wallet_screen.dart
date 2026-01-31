@@ -6,6 +6,8 @@ import 'package:expense_tracker_mobile/providers/user_provider.dart';
 import 'package:expense_tracker_mobile/screens/add_bill_screen.dart';
 import 'package:expense_tracker_mobile/screens/bill_details_screen.dart';
 import 'package:intl/intl.dart';
+import '../models/bill_model.dart';
+import '../models/user_model.dart';
 
 class WalletScreen extends StatefulWidget {
   const WalletScreen({super.key});
@@ -15,7 +17,7 @@ class WalletScreen extends StatefulWidget {
 }
 
 class _WalletScreenState extends State<WalletScreen> {
-  List<dynamic> _bills = [];
+  List<Bill> _bills = [];
   bool _isLoading = true;
 
   @override
@@ -31,9 +33,9 @@ class _WalletScreenState extends State<WalletScreen> {
       final user = context.read<UserProvider>().user;
       final api = context.read<ApiService>();
       if (user != null) {
-        final data = await api.getBills(user['id']);
+        final data = await api.getBills(user.id);
         // Sort by due date ascending (soonest first)
-        data.sort((a, b) => DateTime.parse(a['dueDate']).compareTo(DateTime.parse(b['dueDate'])));
+        data.sort((a, b) => a.dueDate.compareTo(b.dueDate));
         if (mounted) {
           setState(() {
             _bills = data;
@@ -152,8 +154,8 @@ class _WalletScreenState extends State<WalletScreen> {
     );
   }
 
-  Widget _buildBillCard(dynamic bill) {
-    final date = DateTime.parse(bill['dueDate']);
+  Widget _buildBillCard(Bill bill) {
+    final date = bill.dueDate;
     final now = DateTime.now();
     final difference = date.difference(now).inDays;
     
@@ -167,7 +169,7 @@ class _WalletScreenState extends State<WalletScreen> {
     }
 
     return Dismissible(
-      key: Key(bill['id']),
+      key: Key(bill.id),
       direction: DismissDirection.endToStart,
       background: Container(
         color: Colors.red.withOpacity(0.8),
@@ -190,7 +192,7 @@ class _WalletScreenState extends State<WalletScreen> {
           ),
         );
       },
-      onDismissed: (direction) => _deleteBill(bill['id']),
+      onDismissed: (direction) => _deleteBill(bill.id),
       child: InkWell(
         onTap: () async {
           final result = await Navigator.push(
@@ -213,10 +215,10 @@ class _WalletScreenState extends State<WalletScreen> {
               Container(
                  padding: const EdgeInsets.all(12),
                  decoration: BoxDecoration(
-                   color: _getCategoryColor(bill['category']).withOpacity(0.2),
+                   color: _getCategoryColor(bill.category).withOpacity(0.2),
                    borderRadius: BorderRadius.circular(12),
                  ),
-                 child: Icon(_getIconForCategory(bill['category']), color: _getCategoryColor(bill['category'])),
+                 child: Icon(_getIconForCategory(bill.category), color: _getCategoryColor(bill.category)),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -224,7 +226,7 @@ class _WalletScreenState extends State<WalletScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      bill['merchant'] ?? "Unknown",
+                      bill.merchant,
                       style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
                     ),
                     const SizedBox(height: 4),
@@ -236,7 +238,7 @@ class _WalletScreenState extends State<WalletScreen> {
                           DateFormat('MMM dd, yyyy').format(date),
                           style: TextStyle(color: dueColor, fontSize: 12, fontWeight: FontWeight.bold),
                         ),
-                        if (bill['frequency'] != null) ...[
+                        if (bill.frequency.isNotEmpty) ...[
                            const SizedBox(width: 8),
                            Container(
                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -245,18 +247,18 @@ class _WalletScreenState extends State<WalletScreen> {
                                borderRadius: BorderRadius.circular(4),
                              ),
                              child: Text(
-                               bill['frequency'],
+                               bill.frequency,
                                style: const TextStyle(color: Colors.white54, fontSize: 10),
                              ),
                            )
                         ]
                       ],
                     ),
-                    if (bill['note'] != null && (bill['note'] as String).isNotEmpty)
+                    if (bill.note != null && bill.note!.isNotEmpty)
                       Padding(
                         padding: const EdgeInsets.only(top: 4.0),
                         child: Text(
-                          bill['note'],
+                          bill.note!,
                           style: const TextStyle(color: Colors.grey, fontSize: 12, fontStyle: FontStyle.italic),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -269,13 +271,13 @@ class _WalletScreenState extends State<WalletScreen> {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    "₹ ${bill['amount']}",
+                    "₹ ${bill.amount}",
                     style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
                   ),
                   const SizedBox(height: 8),
                   ElevatedButton(
                     onPressed: () {
-                      final due = DateTime.parse(bill['dueDate']);
+                      final due = bill.dueDate;
                       final now = DateTime.now();
                       final today = DateTime(now.year, now.month, now.day);
                       final dueDay = DateTime(due.year, due.month, due.day);
@@ -289,7 +291,7 @@ class _WalletScreenState extends State<WalletScreen> {
                         );
                         return;
                       }
-                      _payBill(bill['id'], bill['merchant']);
+                      _payBill(bill.id, bill.merchant);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF6366F1),

@@ -8,7 +8,7 @@ class SyncSettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = context.watch<UserProvider>().user;
-    final userEmail = user?['email'] ?? "your-email@example.com";
+    final userEmail = user?.email ?? "your-email@example.com";
 
     return Scaffold(
       backgroundColor: const Color(0xFF0F172A),

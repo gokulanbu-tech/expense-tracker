@@ -3,9 +3,10 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:expense_tracker_mobile/services/api_service.dart';
 import 'package:expense_tracker_mobile/screens/add_bill_screen.dart';
+import 'package:expense_tracker_mobile/models/bill_model.dart';
 
 class BillDetailsScreen extends StatefulWidget {
-  final Map<String, dynamic> bill;
+  final Bill bill;
 
   const BillDetailsScreen({super.key, required this.bill});
 
@@ -14,7 +15,7 @@ class BillDetailsScreen extends StatefulWidget {
 }
 
 class _BillDetailsScreenState extends State<BillDetailsScreen> {
-  late Map<String, dynamic> _bill;
+  late Bill _bill;
   bool _isLoading = false;
 
   @override
@@ -34,7 +35,7 @@ class _BillDetailsScreenState extends State<BillDetailsScreen> {
     setState(() => _isLoading = true);
     try {
       final api = context.read<ApiService>();
-      await api.markBillAsPaid(_bill['id']);
+      await api.markBillAsPaid(_bill.id);
       
       // Update local state by advancing date (simple optimisic update or fetch?)
       // Since backend logic is complex (frequency), better to re-fetch if possible.
@@ -77,7 +78,7 @@ class _BillDetailsScreenState extends State<BillDetailsScreen> {
       setState(() => _isLoading = true);
       try {
         final api = context.read<ApiService>();
-        await api.deleteBillBackend(_bill['id']);
+        await api.deleteBillBackend(_bill.id);
         if (mounted) {
            Navigator.pop(context, true); // Back to list
         }
@@ -95,7 +96,8 @@ class _BillDetailsScreenState extends State<BillDetailsScreen> {
   Future<void> _editBill() async {
     final updated = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => AddBillScreen(bill: _bill)),
+      // Passing as JSON until AddBillScreen is refactored
+      MaterialPageRoute(builder: (context) => AddBillScreen(bill: _bill.toJson())),
     );
 
     if (updated == true) {
@@ -110,8 +112,8 @@ class _BillDetailsScreenState extends State<BillDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     // Parse Date
-    final DateTime dueDate = DateTime.parse(_bill['dueDate']);
-    final DateTime? lastPaidDate = _bill['lastPaidDate'] != null ? DateTime.parse(_bill['lastPaidDate']) : null;
+    final DateTime dueDate = _bill.dueDate;
+    final DateTime? lastPaidDate = _bill.lastPaidDate;
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final dueDay = DateTime(dueDate.year, dueDate.month, dueDate.day);
@@ -174,16 +176,16 @@ class _BillDetailsScreenState extends State<BillDetailsScreen> {
               ),
               child: Column(
                 children: [
-                   Icon(_getIconForCategory(_bill['category']), color: Colors.white, size: 48),
+                   Icon(_getIconForCategory(_bill.category), color: Colors.white, size: 48),
                    const SizedBox(height: 16),
                    Text(
-                     _bill['merchant'] ?? "Unknown",
+                     _bill.merchant,
                      style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
                      textAlign: TextAlign.center,
                    ),
                    const SizedBox(height: 8),
                    Text(
-                     "₹ ${_bill['amount']}",
+                     "₹ ${_bill.amount}",
                      style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
                    ),
                    const SizedBox(height: 16),
@@ -204,13 +206,13 @@ class _BillDetailsScreenState extends State<BillDetailsScreen> {
             
             const SizedBox(height: 32),
             
-            _buildDetailRow(Icons.category_rounded, "Category", _bill['category']),
-            _buildDetailRow(Icons.repeat_rounded, "Frequency", _bill['frequency']),
+            _buildDetailRow(Icons.category_rounded, "Category", _bill.category),
+            _buildDetailRow(Icons.repeat_rounded, "Frequency", _bill.frequency),
             _buildDetailRow(Icons.calendar_today_rounded, "Next Due Date", DateFormat('EEEE, MMM d, yyyy').format(dueDate)),
             if (lastPaidDate != null)
               _buildDetailRow(Icons.history_rounded, "Last Paid", DateFormat('MMM d, yyyy').format(lastPaidDate)),
-            if (_bill['note'] != null && _bill['note'].isNotEmpty)
-              _buildDetailRow(Icons.note_alt_rounded, "Note", _bill['note']),
+            if (_bill.note != null && _bill.note!.isNotEmpty)
+              _buildDetailRow(Icons.note_alt_rounded, "Note", _bill.note!),
             
             const SizedBox(height: 40),
             

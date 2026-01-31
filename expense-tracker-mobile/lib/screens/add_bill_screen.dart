@@ -61,7 +61,7 @@ class _AddBillScreenState extends State<AddBillScreen> {
       final api = context.read<ApiService>();
       
       final billData = {
-        "user": {"id": user?['id']},
+        "user": {"id": user?.id},
         "merchant": _merchantController.text,
         "amount": double.parse(_amountController.text),
         "category": _selectedCategory,

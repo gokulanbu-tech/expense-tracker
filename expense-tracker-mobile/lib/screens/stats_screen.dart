@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:expense_tracker_mobile/providers/user_provider.dart';
 import 'package:expense_tracker_mobile/services/api_service.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../models/expense_model.dart';
 
 class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key});
@@ -14,7 +15,7 @@ class StatsScreen extends StatefulWidget {
 
 class _StatsScreenState extends State<StatsScreen> {
   bool _isLoading = true;
-  List<dynamic> _expenses = [];
+  List<Expense> _expenses = [];
   double _totalIncome = 0;
   double _totalExpense = 0;
   
@@ -36,7 +37,7 @@ class _StatsScreenState extends State<StatsScreen> {
       final user = context.read<UserProvider>().user;
       final api = context.read<ApiService>();
       if (user != null) {
-        final data = await api.getExpenses(user['id']);
+        final data = await api.getExpenses(user.id);
         
         double income = 0;
         double expense = 0;
@@ -47,9 +48,9 @@ class _StatsScreenState extends State<StatsScreen> {
         final startOfPeriod = DateTime(now.year, now.month - 5, 1); // Last 6 months
 
         for (var item in data) {
-           final amount = (item['amount'] as num).toDouble();
-           final type = item['type']?.toString().toLowerCase();
-           final date = DateTime.parse(item['date']);
+           final amount = item.amount;
+           final type = item.type.toLowerCase();
+           final date = item.date;
            
            if (type == 'credited') {
              income += amount;
@@ -57,7 +58,7 @@ class _StatsScreenState extends State<StatsScreen> {
              expense += amount;
              
              // Merchant Aggregation
-             final merchant = item['merchant'] ?? 'Unknown';
+             final merchant = item.merchant;
              merchantMap[merchant] = (merchantMap[merchant] ?? 0) + amount;
              
              // Monthly Trend Aggregation (only expenses)

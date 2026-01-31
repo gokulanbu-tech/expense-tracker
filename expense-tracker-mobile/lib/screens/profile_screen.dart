@@ -9,6 +9,7 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // The user is now a User object, not a Map
     final user = context.watch<UserProvider>().user;
 
     return Scaffold(
@@ -40,18 +41,18 @@ class ProfileScreen extends StatelessWidget {
                     radius: 50,
                     backgroundColor: const Color(0xFF6366F1).withOpacity(0.2),
                     child: Text(
-                      user?['firstName']?[0]?.toUpperCase() ?? "U",
+                      (user?.firstName.isNotEmpty == true) ? user!.firstName[0].toUpperCase() : "U",
                       style: const TextStyle(color: Color(0xFF6366F1), fontSize: 40, fontWeight: FontWeight.bold),
                     ),
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    "${user?['firstName']} ${user?['lastName']}",
+                    "${user?.firstName ?? ''} ${user?.lastName ?? ''}",
                     style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    user?['email'] ?? "",
+                    user?.email ?? "",
                     style: const TextStyle(color: Colors.grey, fontSize: 16),
                   ),
                 ],
@@ -59,9 +60,9 @@ class ProfileScreen extends StatelessWidget {
             ),
             const SizedBox(height: 40),
             _buildInfoCard([
-              _buildInfoRow(Icons.account_balance_wallet_outlined, "Monthly Budget", "₹ ${user?['monthlyBudget']}"),
+              _buildInfoRow(Icons.account_balance_wallet_outlined, "Monthly Budget", "₹ ${user?.monthlyBudget ?? 0}"),
               const Divider(color: Colors.white12, height: 32),
-              _buildInfoRow(Icons.phone_android_rounded, "Mobile Number", user?['mobileNumber'] ?? ""),
+              _buildInfoRow(Icons.phone_android_rounded, "Mobile Number", user?.mobileNumber ?? ""),
             ]),
             const SizedBox(height: 32),
             SizedBox(

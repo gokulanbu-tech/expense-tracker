@@ -23,6 +23,7 @@ public class Expense {
     private BigDecimal amount;
 
     private String currency = "INR";
+
     private String category;
     private String merchant;
 

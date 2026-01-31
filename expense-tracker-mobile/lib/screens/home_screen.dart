@@ -10,6 +10,8 @@ import 'package:expense_tracker_mobile/screens/all_expenses_screen.dart';
 import 'package:expense_tracker_mobile/screens/stats_screen.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:expense_tracker_mobile/screens/wallet_screen.dart';
+import '../models/user_model.dart';
+import '../models/expense_model.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -21,8 +23,8 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   String _selectedTimeframe = 'Monthly';
-  List<dynamic> _allExpenses = [];
-  List<dynamic> _filteredExpenses = [];
+  List<Expense> _allExpenses = [];
+  List<Expense> _filteredExpenses = [];
   bool _isLoading = true;
   double _totalAmount = 0; // Interpreted as Expenses
   double _totalIncome = 0;
@@ -42,9 +44,9 @@ class _HomeScreenState extends State<HomeScreen> {
       final user = context.read<UserProvider>().user;
       final api = context.read<ApiService>();
       if (user != null) {
-        final data = await api.getExpenses(user['id']);
+        final data = await api.getExpenses(user.id);
         // Sort by date descending
-        data.sort((a, b) => DateTime.parse(b['date']).compareTo(DateTime.parse(a['date'])));
+        data.sort((a, b) => b.date.compareTo(a.date));
         
         setState(() {
           _allExpenses = data;
@@ -68,7 +70,7 @@ class _HomeScreenState extends State<HomeScreen> {
     
     setState(() {
       _filteredExpenses = _allExpenses.where((expense) {
-        final date = DateTime.parse(expense['date']);
+        final date = expense.date;
         final expenseDate = DateTime(date.year, date.month, date.day);
         
         switch (_selectedTimeframe) {
@@ -95,8 +97,8 @@ class _HomeScreenState extends State<HomeScreen> {
       _totalIncome = 0;
       
       for (var item in _filteredExpenses) {
-        final amount = (item['amount'] as num).toDouble();
-        final type = item['type']?.toString().toLowerCase();
+        final amount = _getInrAmount(item);
+        final type = item.type.toLowerCase();
         
         if (type == 'credited') {
           _totalIncome += amount;
@@ -151,7 +153,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildDashboard(Map<String, dynamic>? user) {
+  Widget _buildDashboard(User? user) {
     return SafeArea(
       child: RefreshIndicator(
         onRefresh: _fetchExpenses,
@@ -178,7 +180,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                             Text(
-                              user?['firstName'] ?? "User",
+                              user?.firstName ?? "User",
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 24,
@@ -271,7 +273,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               children: [
                                  _InfoTile(
                                    label: "Budget", 
-                                   value: "₹ ${((user?['monthlyBudget'] ?? 0.0) as num).toStringAsFixed(0)}"
+                                   value: "₹ ${(user?.monthlyBudget ?? 0.0).toStringAsFixed(0)}"
                                  ),
                                  if (_totalIncome > 0)
                                  _InfoTile(
@@ -280,7 +282,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                  ),
                                  _InfoTile(
                                    label: "Remaining", 
-                                   value: "₹ ${(((user?['monthlyBudget'] ?? 0.0) as num) - _totalAmount).toStringAsFixed(0)}"
+                                   value: "₹ ${((user?.monthlyBudget ?? 0.0) - _totalAmount).toStringAsFixed(0)}"
                                  ),
                               ],
                             ),
@@ -371,13 +373,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     TextButton(
-                      onPressed: () {
-                        Navigator.push(
+                      onPressed: () async {
+                        final updated = await Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => AllExpensesScreen(expenses: _filteredExpenses),
                           ),
                         );
+                        if (updated == true) _fetchExpenses();
                       },
                       child: const Text("See All"),
                     ),
@@ -421,7 +424,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 color: Colors.indigo.withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: Icon(_getIconForCategory(expense['category']), color: Colors.indigoAccent),
+                              child: Icon(_getIconForCategory(expense.category), color: Colors.indigoAccent),
                             ),
                             const SizedBox(width: 16),
                             Expanded(
@@ -429,20 +432,20 @@ class _HomeScreenState extends State<HomeScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    expense['merchant'] ?? "Unknown",
+                                    expense.merchant,
                                     style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                                   ),
                                   Text(
-                                    expense['category'] ?? "General",
+                                    expense.category,
                                     style: const TextStyle(color: Colors.grey, fontSize: 12),
                                   ),
                                 ],
                               ),
                             ),
                             Text(
-                              "${(expense['type'].toString().toLowerCase() == 'credited') ? '+' : '-'} ₹ ${expense['amount']}",
+                              "${(expense.type.toLowerCase() == 'credited') ? '+' : '-'} ${expense.currencySymbol} ${expense.amount}",
                               style: TextStyle(
-                                color: (expense['type'].toString().toLowerCase() == 'credited') ? const Color(0xFF10B981) : Colors.redAccent,
+                                color: (expense.type.toLowerCase() == 'credited') ? const Color(0xFF10B981) : Colors.redAccent,
                                 fontWeight: FontWeight.bold
                               ),
                             ),
@@ -464,9 +467,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildPieChart() {
     final Map<String, double> categoryData = {};
     for (var expense in _filteredExpenses) {
-      if (expense['type']?.toString().toLowerCase() == 'credited') continue;
-      final category = expense['category'] ?? 'Other';
-      categoryData[category] = (categoryData[category] ?? 0) + (expense['amount'] as num).toDouble();
+      if (expense.type.toLowerCase() == 'credited') continue;
+      final category = expense.category;
+      categoryData[category] = (categoryData[category] ?? 0) + _getInrAmount(expense);
     }
 
     final sections = categoryData.entries.map((entry) {
@@ -493,9 +496,9 @@ class _HomeScreenState extends State<HomeScreen> {
     int maxKey = 0;
     
     for (var expense in _filteredExpenses) {
-      if (expense['type']?.toString().toLowerCase() == 'credited') continue;
+      if (expense.type.toLowerCase() == 'credited') continue;
       
-      final date = DateTime.parse(expense['date']);
+      final date = expense.date;
       int key = 0;
       
       if (_selectedTimeframe == 'Weekly') {
@@ -509,7 +512,7 @@ class _HomeScreenState extends State<HomeScreen> {
         maxKey = 12;
       }
       
-      timeData[key] = (timeData[key] ?? 0) + (expense['amount'] as num).toDouble();
+      timeData[key] = (timeData[key] ?? 0) + _getInrAmount(expense);
     }
 
     // 2. Prepare Spots
@@ -604,9 +607,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildChartLegend() {
     final Map<String, double> categoryData = {};
     for (var expense in _filteredExpenses) {
-      if (expense['type']?.toString().toLowerCase() == 'credited') continue;
-      final category = expense['category'] ?? 'Other';
-      categoryData[category] = (categoryData[category] ?? 0) + (expense['amount'] as num).toDouble();
+      if (expense.type.toLowerCase() == 'credited') continue;
+      final category = expense.category;
+      categoryData[category] = (categoryData[category] ?? 0) + _getInrAmount(expense);
     }
 
     final totalAll = categoryData.values.fold(0.0, (sum, val) => sum + val);
@@ -617,7 +620,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: topCategories.take(3).map((entry) {
-        double percentVal = (entry.value / (totalAll > 0 ? totalAll : 1) * 100);
+        double percentVal = (totalAll > 0 ? (entry.value / totalAll * 100) : 0);
         String percentage;
         if (percentVal > 0 && percentVal < 0.1) {
           percentage = "< 0.1";
@@ -668,6 +671,14 @@ class _HomeScreenState extends State<HomeScreen> {
       case 'Travel': return const Color(0xFF06B6D4);
       default: return Colors.grey;
     }
+  }
+
+  double _getInrAmount(Expense e) {
+    if (e.currency == 'INR') return e.amount;
+    if (e.currency == 'USD') return e.amount * 87.0;
+    if (e.currency == 'EUR') return e.amount * 92.0;
+    if (e.currency == 'GBP') return e.amount * 110.0;
+    return e.amount;
   }
 
   IconData _getIconForCategory(String? category) {

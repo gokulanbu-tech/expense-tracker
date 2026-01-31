@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:expense_tracker_mobile/services/api_service.dart';
-
+import 'package:expense_tracker_mobile/models/expense_model.dart';
 import 'package:expense_tracker_mobile/screens/add_expense_screen.dart';
 
 class DetailsScreen extends StatefulWidget {
-  final Map<String, dynamic> expense;
+  final Expense expense;
 
   const DetailsScreen({super.key, required this.expense});
 
@@ -15,7 +15,7 @@ class DetailsScreen extends StatefulWidget {
 }
 
 class _DetailsScreenState extends State<DetailsScreen> {
-  late Map<String, dynamic> _currentExpense;
+  late Expense _currentExpense;
 
   @override
   void initState() {
@@ -46,7 +46,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
     if (confirmed == true) {
       try {
         final api = context.read<ApiService>();
-        await api.deleteExpense(_currentExpense['id'].toString());
+        await api.deleteExpense(_currentExpense.id);
         if (context.mounted) {
           Navigator.pop(context, true);
         }
@@ -78,7 +78,9 @@ class _DetailsScreenState extends State<DetailsScreen> {
             onPressed: () async {
               final updated = await Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => AddExpenseScreen(expense: _currentExpense)),
+                // Passing as JSON because AddExpenseScreen still expects Map. 
+                // TODO: Refactor AddExpenseScreen to accept Expense object.
+                MaterialPageRoute(builder: (context) => AddExpenseScreen(expense: _currentExpense.toJson())),
               );
               if (updated == true && context.mounted) {
                 // In a perfect world, we'd fetch the single updated expense from the API here
@@ -108,14 +110,14 @@ class _DetailsScreenState extends State<DetailsScreen> {
               child: Column(
                 children: [
                    Text(
-                    _currentExpense['currency'] ?? "INR",
+                    _currentExpense.currency,
                     style: const TextStyle(color: Colors.grey, fontSize: 16),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    "₹ ${_currentExpense['amount'].toStringAsFixed(2)}",
+                    "${_currentExpense.currencySymbol} ${_currentExpense.amount.toStringAsFixed(2)}",
                     style: TextStyle(
-                      color: _currentExpense['type'] == 'Credited' ? const Color(0xFF10B981) : Colors.white,
+                      color: _currentExpense.type == 'Credited' ? const Color(0xFF10B981) : Colors.white,
                       fontSize: 48,
                       fontWeight: FontWeight.bold,
                     ),
@@ -125,17 +127,17 @@ class _DetailsScreenState extends State<DetailsScreen> {
             ),
             const SizedBox(height: 32),
             _buildInfoCard([
-              _buildInfoRow(Icons.storefront_outlined, "Merchant", _currentExpense['merchant']),
+              _buildInfoRow(Icons.storefront_outlined, "Merchant", _currentExpense.merchant),
               const Divider(color: Colors.white12, height: 32),
-              _buildInfoRow(Icons.category_outlined, "Category", _currentExpense['category']),
+              _buildInfoRow(Icons.category_outlined, "Category", _currentExpense.category),
               const Divider(color: Colors.white12, height: 32),
-              _buildInfoRow(Icons.receipt_long_outlined, "Type", _currentExpense['type']),
+              _buildInfoRow(Icons.receipt_long_outlined, "Type", _currentExpense.type),
               const Divider(color: Colors.white12, height: 32),
-              _buildInfoRow(Icons.calendar_today_outlined, "Date", _formatDate(_currentExpense['date'])),
+              _buildInfoRow(Icons.calendar_today_outlined, "Date", _formatDate(_currentExpense.date)),
               const Divider(color: Colors.white12, height: 32),
-              _buildInfoRow(Icons.account_balance_wallet_outlined, "Source", _currentExpense['source']),
+              _buildInfoRow(Icons.account_balance_wallet_outlined, "Source", _currentExpense.source),
             ]),
-            if (_currentExpense['notes'] != null && _currentExpense['notes'].isNotEmpty) ...[
+            if (_currentExpense.notes != null && _currentExpense.notes!.isNotEmpty) ...[
               const SizedBox(height: 24),
               _buildSectionHeader("Notes"),
               const SizedBox(height: 12),
@@ -147,7 +149,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                    borderRadius: BorderRadius.circular(16),
                 ),
                 child: Text(
-                  _currentExpense['notes'],
+                  _currentExpense.notes!,
                   style: const TextStyle(color: Colors.white, height: 1.5),
                 ),
               ),
@@ -203,12 +205,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
     );
   }
 
-  String _formatDate(String dateString) {
-    try {
-      final date = DateTime.parse(dateString);
-      return DateFormat('yMMMMd h:mm a').format(date);
-    } catch (e) {
-      return dateString;
-    }
+  String _formatDate(DateTime date) {
+    return DateFormat('yMMMMd h:mm a').format(date);
   }
 }

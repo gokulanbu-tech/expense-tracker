@@ -2,12 +2,10 @@ spring:
   application:
     name: expense-tracker-backend
   datasource:
-    url: ${DATABASE_URL}
-    username: ${DATABASE_USERNAME}
-    password: ${DATABASE_PASSWORD}
-    driver-class-name: org.postgresql.Driver
+    url: jdbc:sqlite:expense-tracker.db
+    driver-class-name: org.sqlite.JDBC
   jpa:
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
     hibernate:
       ddl-auto: update
     show-sql: true
@@ -18,3 +16,7 @@ spring:
   jackson:
     serialization:
       write-dates-as-timestamps: false
+
+openai:
+  api:
+    key: ${OPENAI_API_KEY}

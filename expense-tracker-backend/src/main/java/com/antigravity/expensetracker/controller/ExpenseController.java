@@ -34,12 +34,14 @@ public class ExpenseController {
     public Expense updateExpense(@PathVariable UUID id, @RequestBody Expense expense) {
         return expenseRepository.findById(id).map(existingExpense -> {
             existingExpense.setAmount(expense.getAmount());
+            existingExpense.setCurrency(expense.getCurrency());
             existingExpense.setCategory(expense.getCategory());
             existingExpense.setMerchant(expense.getMerchant());
             existingExpense.setDate(expense.getDate());
             existingExpense.setNotes(expense.getNotes());
             existingExpense.setType(expense.getType());
             existingExpense.setSource(expense.getSource());
+
             return expenseRepository.save(existingExpense);
         }).orElseThrow(() -> new RuntimeException("Expense not found"));
     }

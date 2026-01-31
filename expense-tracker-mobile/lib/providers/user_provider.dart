@@ -4,14 +4,15 @@ import 'package:expense_tracker_mobile/services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import '../models/user_model.dart';
 
 class UserProvider with ChangeNotifier {
-  Map<String, dynamic>? _user;
+  User? _user;
   bool _isLoggedIn = false;
   final GmailService _gmailService = GmailService();
   final ApiService _apiService = ApiService();
 
-  Map<String, dynamic>? get user => _user;
+  User? get user => _user;
   bool get isLoggedIn => _isLoggedIn;
 
   Future<void> tryAutoLogin() async {
@@ -20,12 +21,12 @@ class UserProvider with ChangeNotifier {
 
     final String? userDataString = prefs.getString('user_data');
     if (userDataString != null) {
-      _user = jsonDecode(userDataString);
+      _user = User.fromJson(jsonDecode(userDataString));
       _isLoggedIn = true;
       notifyListeners();
       // Auto-sync emails in background if logged in
       if (_user != null) {
-        _gmailService.syncExpenses(_user!['id']).then((_) => notifyListeners());
+        _gmailService.syncExpenses(_user!.id).then((_) => notifyListeners());
       }
     }
   }
@@ -37,31 +38,31 @@ class UserProvider with ChangeNotifier {
       final firstName = names.isNotEmpty ? names[0] : "";
       final lastName = names.length > 1 ? names[1] : "";
       
-      final userData = await _apiService.loginWithGoogle(
+      final user = await _apiService.loginWithGoogle(
         account.email, 
         firstName, 
         lastName
       );
       
-      await setUser(userData);
+      await setUser(user);
     }
   }
 
   Future<void> syncEmails() async {
     if (_user != null) {
-      await _gmailService.syncExpenses(_user!['id']);
+      await _gmailService.syncExpenses(_user!.id);
       notifyListeners();
     }
   }
 
-  Future<void> setUser(Map<String, dynamic> userData) async {
-    _user = userData;
+  Future<void> setUser(User user) async {
+    _user = user;
     _isLoggedIn = true;
     
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('user_data', jsonEncode(userData));
-    await prefs.setString('user_mobile', userData['mobileNumber']);
-    await prefs.setString('user_id', userData['id']);
+    await prefs.setString('user_data', jsonEncode(user.toJson()));
+    await prefs.setString('user_mobile', user.mobileNumber);
+    await prefs.setString('user_id', user.id);
     
     notifyListeners();
 
@@ -78,3 +79,4 @@ class UserProvider with ChangeNotifier {
     notifyListeners();
   }
 }
+

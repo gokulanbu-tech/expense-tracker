@@ -73,6 +73,13 @@ flutter run
     *   Track recurring subscriptions and utilities.
     *   Auto-pay detection logic that links expenses to bills.
     *   Full lifecycle management (Create, Edit, Delete, Mark as Paid).
+    *   **Logic**: Strict validation prevents paying bills before their due date.
+
+### 🤖 AI Powered
+*   **Smart Parsing**: Extracts transaction details from unstructured text (emails/SMS).
+*   **Financial Insights**: Analysis of monthly spending habits.
+*   **Chatbot**: Context-aware Q&A about your recent expenses.
+
 
 ### 📊 Analytics
 *   **Interactive Dashboard**: Visualize spending by category or timeframe (Daily/Weekly/Monthly).

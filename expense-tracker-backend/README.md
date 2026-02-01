@@ -7,6 +7,7 @@ The core backend service for the Expense Tracker ecosystem, built with **Spring 
 *   **Framework**: Spring Boot 3.2.3
 *   **Database**: SQLite (Default) / PostgreSQL (Supported)
 *   **ORM**: Hibernate / Spring Data JPA
+*   **AI/LLM**: OpenAI GPT-4o-mini (via `GeminiService`)
 *   **Docs**: OpenAPI (Swagger UI)
 *   **Build Tool**: Gradle
 
@@ -14,6 +15,8 @@ The core backend service for the Expense Tracker ecosystem, built with **Spring 
 
 ### 1. Prerequisites
 *   Java JDK 21 installed (`java -version`)
+*   **OpenAI API Key**: Required for smart parsing and insights.
+
 
 ### 2. Run Locally
 ```bash
@@ -65,6 +68,17 @@ To switch to PostgreSQL for production:
         password: ${DATABASE_PASSWORD}
     ```
 
+### OpenAI API Key
+The application requires an OpenAI API key for parsing emails and generating insights.
+1.  **Environment Variable**: Set `OPENAI_API_KEY` in your environment.
+2.  **Application Config**: Or update `application.yml`:
+    ```yaml
+    openai:
+      api:
+        key: ${OPENAI_API_KEY}
+    ```
+
+
 
 
 ---
@@ -75,7 +89,18 @@ To switch to PostgreSQL for production:
 
 ---
 
+---
+
+## 🤖 AI Features
+Powered by **GPT-4o-mini**, the backend provides:
+*   **Smart Parsing**: Tries to extract structured data (amount, merchant, category) from raw email/SMS text.
+*   **Financial Insights**: Analyzes monthly spending to offer actionable savings advice.
+*   **Chatbot Context**: Provides context-aware answers to user queries about their financial data (last 30 days).
+
+---
+
 ## 🔑 Key API Endpoints
+
 
 ### Authentication
 | Method | Endpoint | Description |

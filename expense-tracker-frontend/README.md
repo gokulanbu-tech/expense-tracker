@@ -39,7 +39,9 @@ This generates a `dist` folder ready for deployment (e.g., to Vercel, Netlify).
 *   **Dashboard**: Visual overview of monthly spending and budget status.
 *   **Expense Log**: Detailed table view of all transactions with filtering.
 *   **Dark Mode**: Dark-themed UI for better visual comfort.
+*   **Multi-Currency**: Displays original currency symbols for transactions, with static conversion for totals (INR base).
 *   **Responsive**: Works seamlessly on Desktop, Tablet, and Mobile web.
+
 
 ## 🔗 Connection to Backend
 This frontend is configured to talk to the backend at `http://localhost:8080`.

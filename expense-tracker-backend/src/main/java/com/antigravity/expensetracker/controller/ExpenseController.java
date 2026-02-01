@@ -26,6 +26,7 @@ public class ExpenseController {
     }
 
     @PostMapping
+    @org.springframework.cache.annotation.CacheEvict(value = "suggestions", allEntries = true)
     public Expense createExpense(@RequestBody Expense expense) {
         return expenseRepository.save(expense);
     }

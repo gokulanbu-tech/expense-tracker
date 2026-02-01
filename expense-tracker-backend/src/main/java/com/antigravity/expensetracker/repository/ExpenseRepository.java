@@ -14,4 +14,8 @@ public interface ExpenseRepository extends JpaRepository<Expense, UUID> {
             java.math.BigDecimal amount,
             java.time.LocalDateTime startDate,
             java.time.LocalDateTime endDate);
+
+    List<Expense> findTop5ByUserIdAndMerchantOrderByDateDesc(UUID userId, String merchant);
+
+    List<Expense> findByUserIdAndDateAfter(UUID userId, java.time.LocalDateTime date);
 }

@@ -25,7 +25,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   DateTime _selectedDate = DateTime.now();
   bool _isLoading = false;
 
-  final List<String> _categories = ['Food', 'Transport', 'Utilities', 'Shopping', 'Entertainment', 'Health', 'Travel'];
+  final List<String> _categories = ['Food', 'Transport', 'Utilities', 'Shopping', 'Entertainment', 'Health', 'Travel', 'Investment'];
   final List<String> _types = ['Spent', 'Credited', 'Debited'];
 
   String _selectedCurrency = 'INR';

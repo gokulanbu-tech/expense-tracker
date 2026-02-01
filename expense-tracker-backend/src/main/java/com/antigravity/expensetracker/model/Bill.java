@@ -19,15 +19,15 @@ public class Bill {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String merchant;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String category;
 
     private String note;
 
-    @Column(nullable = false)
+    @Column(name = "type")
     private String type = "Debit";
 
     @Column(name = "amount", nullable = false)

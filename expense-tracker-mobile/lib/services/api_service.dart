@@ -126,27 +126,13 @@ class ApiService {
     }
   }
 
-  Future<List<dynamic>> getSuggestions() async {
-    // Current web app simulates this, we'll do the same until backend is ready
-    await Future.delayed(const Duration(seconds: 1));
-    return [
-      {
-        "id": "s1",
-        "title": "Cancel Unused Subscription",
-        "description": "You haven't used \"Premium Music\" in 30 days.",
-        "category": "Subscription",
-        "potentialSavings": 199.00,
-        "type": "subscription"
-      },
-      {
-        "id": "s2",
-        "title": "Coffee Habit",
-        "description": "Switching to home brewing could save ₹3000/month.",
-        "category": "Food",
-        "potentialSavings": 3000.00,
-        "type": "habit"
-      }
-    ];
+  Future<List<dynamic>> getSuggestions(String userId) async {
+    final response = await http.get(Uri.parse("$baseUrl/suggestions?userId=$userId"));
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception("Failed to load insights: ${response.statusCode}");
+    }
   }
 
   Future<void> saveEmailLog(Map<String, dynamic> emailData) async {
@@ -204,6 +190,33 @@ class ApiService {
 
     if (response.statusCode != 200) {
       throw Exception("Failed to update bill: ${response.body}");
+    }
+  }
+  Future<Map<String, dynamic>> sendMessage(String userId, String message, {List<String>? history}) async {
+    final body = {
+      "message": message,
+      "history": history ?? [],
+    };
+
+    final response = await http.post(
+      Uri.parse("$baseUrl/chat/ask?userId=$userId"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode(body),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception("Failed to send message: ${response.body}");
+    }
+  }
+
+  Future<int> getChatStatus(String userId) async {
+    final response = await http.get(Uri.parse("$baseUrl/chat/status?userId=$userId"));
+    if (response.statusCode == 200) {
+      return int.parse(response.body);
+    } else {
+      throw Exception("Failed to get chat status");
     }
   }
 }

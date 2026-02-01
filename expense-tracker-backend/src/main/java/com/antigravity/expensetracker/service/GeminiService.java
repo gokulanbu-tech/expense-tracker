@@ -59,7 +59,8 @@ public class GeminiService {
                         "currency (ISO code, e.g. INR, USD), " +
                         "merchant (string, beneficiary name OR merchant name), " +
                         "date (YYYY-MM-DD), " +
-                        "category (string, default to 'Transaction' for money transfers), " +
+                        "category (string, default to 'Transaction' for money transfers. Use standard categories like 'Food', 'Transport', 'Utilities', 'Shopping', 'Entertainment', 'Health', 'Travel', 'Investment'), "
+                        +
                         "type (string, use 'Credited' for income/deposits, 'Debited' for expense/spends), " +
                         "paymentMethod (string), " +
                         "notes (string, extract the full transaction reference/narration e.g. 'UPI/P2A/...'), " +
@@ -69,17 +70,8 @@ public class GeminiService {
                 request.getSender(), request.getSubject(), request.getBody());
     }
 
-    private void logToFile(String message) {
-        try (java.io.FileWriter fw = new java.io.FileWriter("debug_parse.log", true);
-                java.io.PrintWriter pw = new java.io.PrintWriter(fw)) {
-            pw.println(java.time.LocalDateTime.now() + ": " + message);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
     private String callOpenAiApi(String prompt) {
-        logToFile("Calling OpenAI API...");
+        log.info("Calling OpenAI API...");
         Map<String, Object> requestBody = Map.of(
                 "model", MODEL,
                 "messages", List.of(
@@ -99,10 +91,10 @@ public class GeminiService {
                     .timeout(Duration.ofSeconds(60)) // Increased timeout
                     .retryWhen(Retry.backoff(3, Duration.ofSeconds(2)))
                     .block();
-            logToFile("OpenAI Response: " + response);
+            log.debug("OpenAI Response: {}", response);
             return response;
         } catch (Exception e) {
-            logToFile("OpenAI FAILURE: " + e.getMessage());
+            log.error("OpenAI FAILURE: {}", e.getMessage());
             throw e;
         }
     }
@@ -155,5 +147,98 @@ public class GeminiService {
             response.setError(true);
         }
         return response;
+    }
+
+    public List<com.antigravity.expensetracker.dto.Suggestion> generateInsights(
+            List<com.antigravity.expensetracker.model.Expense> expenses) {
+        if (expenses.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+
+        // Summarize expenses to save tokens
+        StringBuilder expenseSummary = new StringBuilder();
+        // Group by Merchant to make it concise
+        Map<String, Double> merchantTotals = expenses.stream()
+                .collect(java.util.stream.Collectors.groupingBy(
+                        com.antigravity.expensetracker.model.Expense::getMerchant,
+                        java.util.stream.Collectors.summingDouble(e -> e.getAmount().doubleValue())));
+
+        merchantTotals.forEach((m, total) -> {
+            expenseSummary.append(String.format("- %s: %.2f\n", m, total));
+        });
+
+        String prompt = "You are a financial advisor. Analyze the following expense summary (last 30 days). " +
+                "Identify 3-5 specific opportunities for savings or unusual spending habits. " +
+                "Return ONLY a clean JSON array (no markdown code blocks) of objects with these fields:\n" +
+                "- title (Short, punchy header)\n" +
+                "- description (Friendly advice, be specific about the merchant/category)\n" +
+                "- category (e.g. 'Food', 'Subscription', 'Transport')\n" +
+                "- potentialSavings (Estimated numeric amount per month)\n" +
+                "- type ('habit', 'subscription', 'one-time')\n" +
+                "- merchant (The exact merchant name to filter by, if applicable, else null)\n\n" +
+                "Expense Summary:\n" + expenseSummary.toString();
+
+        try {
+            String jsonResponse = callOpenAiApi(prompt);
+            return parseSuggestions(jsonResponse);
+        } catch (Exception e) {
+            log.error("Failed to generate insights", e);
+            return java.util.Collections.emptyList();
+        }
+    }
+
+    private List<com.antigravity.expensetracker.dto.Suggestion> parseSuggestions(String rawResponse) {
+        try {
+            JsonNode root = objectMapper.readTree(rawResponse);
+            JsonNode choices = root.path("choices");
+            if (choices.isArray() && !choices.isEmpty()) {
+                String text = choices.get(0).path("message").path("content").asText();
+
+                // Clean up markdown
+                if (text.startsWith("```json")) {
+                    text = text.replace("```json", "").replace("```", "");
+                } else if (text.startsWith("```")) {
+                    text = text.replace("```", "");
+                }
+
+                return objectMapper.readValue(text,
+                        new com.fasterxml.jackson.core.type.TypeReference<List<com.antigravity.expensetracker.dto.Suggestion>>() {
+                        });
+            }
+        } catch (Exception e) {
+            log.error("Error parsing suggestions JSON", e);
+        }
+        return java.util.Collections.emptyList();
+
+    }
+
+    public String chatWithData(String systemPrompt, String userMessage) {
+        log.info("Chat Request: {}", userMessage);
+
+        Map<String, Object> requestBody = Map.of(
+                "model", MODEL,
+                "messages", List.of(
+                        Map.of("role", "system", "content", systemPrompt),
+                        Map.of("role", "user", "content", userMessage)),
+                "temperature", 0.7 // Slightly more creative for chat
+        );
+
+        try {
+            String response = webClient.post()
+                    .uri(OPENAI_URL)
+                    .header("Authorization", "Bearer " + apiKey)
+                    .header("Content-Type", "application/json")
+                    .bodyValue(requestBody)
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .timeout(Duration.ofSeconds(30))
+                    .block();
+
+            JsonNode root = objectMapper.readTree(response);
+            return root.path("choices").get(0).path("message").path("content").asText();
+        } catch (Exception e) {
+            log.error("Chat API failed", e);
+            return "I'm having trouble connecting to my brain right now. Please try again later.";
+        }
     }
 }

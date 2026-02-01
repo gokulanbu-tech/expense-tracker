@@ -288,6 +288,7 @@ class _BillDetailsScreenState extends State<BillDetailsScreen> {
       case 'Utilities': return Icons.power_rounded;
       case 'Health': return Icons.medical_services_rounded;
       case 'Travel': return Icons.flight_takeoff_rounded;
+      case 'Investment': return Icons.trending_up_rounded;
       default: return Icons.category_rounded;
     }
   }

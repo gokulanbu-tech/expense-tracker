@@ -9,14 +9,14 @@ import 'package:intl/intl.dart';
 import '../models/bill_model.dart';
 import '../models/user_model.dart';
 
-class WalletScreen extends StatefulWidget {
-  const WalletScreen({super.key});
+class BillsScreen extends StatefulWidget {
+  const BillsScreen({super.key});
 
   @override
-  State<WalletScreen> createState() => _WalletScreenState();
+  State<BillsScreen> createState() => _BillsScreenState();
 }
 
-class _WalletScreenState extends State<WalletScreen> {
+class _BillsScreenState extends State<BillsScreen> {
   List<Bill> _bills = [];
   bool _isLoading = true;
 
@@ -321,6 +321,7 @@ class _WalletScreenState extends State<WalletScreen> {
       case 'Utilities': return const Color(0xFF10B981);
       case 'Health': return const Color(0xFFEF4444);
       case 'Travel': return const Color(0xFF06B6D4);
+      case 'Investment': return Colors.tealAccent;
       default: return Colors.blueGrey;
     }
   }
@@ -334,6 +335,7 @@ class _WalletScreenState extends State<WalletScreen> {
       case 'Utilities': return Icons.power_rounded;
       case 'Health': return Icons.medical_services_rounded;
       case 'Travel': return Icons.flight_takeoff_rounded;
+      case 'Investment': return Icons.trending_up_rounded;
       default: return Icons.category_rounded;
     }
   }

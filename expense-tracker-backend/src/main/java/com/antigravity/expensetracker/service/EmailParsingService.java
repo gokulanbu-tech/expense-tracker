@@ -99,31 +99,77 @@ public class EmailParsingService {
     }
 
     private void checkForRecurringBill(Expense expense, String content) {
-        String lowerContent = content.toLowerCase();
-        if (lowerContent.contains("auto pay") || lowerContent.contains("auto-pay")
-                || lowerContent.contains("subscription") || lowerContent.contains("recurring")) {
+        // 1. Check if bill already exists (Avoid duplicates)
+        java.util.List<com.antigravity.expensetracker.model.Bill> existing = billRepository
+                .findByUserId(expense.getUser().getId());
+        boolean exists = existing.stream().anyMatch(b -> b.getMerchant().equalsIgnoreCase(expense.getMerchant()));
 
-            // Check if bill already exists
-            java.util.List<com.antigravity.expensetracker.model.Bill> existing = billRepository
-                    .findByUserId(expense.getUser().getId());
-            boolean exists = existing.stream().anyMatch(b -> b.getMerchant().equalsIgnoreCase(expense.getMerchant()));
+        if (exists)
+            return;
 
-            if (!exists) {
-                com.antigravity.expensetracker.model.Bill newBill = new com.antigravity.expensetracker.model.Bill();
-                newBill.setUser(expense.getUser());
-                newBill.setMerchant(expense.getMerchant());
-                newBill.setAmount(expense.getAmount());
-                newBill.setCategory(expense.getCategory());
-                newBill.setNote("Auto-detected from email");
-                newBill.setType("Debit");
-                newBill.setFrequency("MONTHLY"); // Default guess
-                // Set due date to next month approx
-                newBill.setDueDate(expense.getDate().plusMonths(1));
+        boolean created = false;
 
-                billRepository.save(newBill);
-                System.out.println("Auto-created Bill for " + expense.getMerchant());
+        // 2. Fetch History (Recent 5 transactions for this merchant)
+        java.util.List<Expense> history = expenseRepository.findTop5ByUserIdAndMerchantOrderByDateDesc(
+                expense.getUser().getId(),
+                expense.getMerchant());
+
+        // We need at least 2 transactions (Current [0] + Previous [1]) to calculate an
+        // interval
+        if (history.size() >= 2) {
+            Expense current = history.get(0);
+            Expense previous = history.get(1);
+
+            long daysBetween = java.time.temporal.ChronoUnit.DAYS.between(
+                    previous.getDate().toLocalDate(),
+                    current.getDate().toLocalDate());
+
+            String detectedFrequency = null;
+
+            if (daysBetween >= 25 && daysBetween <= 35) {
+                detectedFrequency = "MONTHLY";
+            } else if (daysBetween >= 360 && daysBetween <= 375) {
+                detectedFrequency = "YEARLY";
+            }
+
+            if (detectedFrequency != null) {
+                createBill(expense, detectedFrequency,
+                        "Auto-detected " + detectedFrequency + " pattern based on transaction history.");
+                created = true;
             }
         }
+
+        // 3. Fallback to Keyword Detection if no pattern found yet
+        if (!created) {
+            String lowerContent = content.toLowerCase();
+            if (lowerContent.contains("auto pay") || lowerContent.contains("auto-pay")
+                    || lowerContent.contains("subscription") || lowerContent.contains("recurring")) {
+                createBill(expense, "MONTHLY", "Auto-detected from email keywords");
+            }
+        }
+    }
+
+    private void createBill(Expense expense, String frequency, String note) {
+        com.antigravity.expensetracker.model.Bill newBill = new com.antigravity.expensetracker.model.Bill();
+        newBill.setUser(expense.getUser());
+        newBill.setMerchant(expense.getMerchant());
+        newBill.setAmount(expense.getAmount());
+        newBill.setCategory(expense.getCategory());
+        newBill.setNote(note);
+        newBill.setType("Debit");
+        newBill.setFrequency(frequency);
+
+        if ("MONTHLY".equals(frequency)) {
+            newBill.setDueDate(expense.getDate().plusMonths(1));
+        } else if ("YEARLY".equals(frequency)) {
+            newBill.setDueDate(expense.getDate().plusYears(1));
+        } else {
+            // Default fallback
+            newBill.setDueDate(expense.getDate().plusMonths(1));
+        }
+
+        billRepository.save(newBill);
+        System.out.println("Auto-created " + frequency + " Bill for " + expense.getMerchant());
     }
 
     private Expense extractExpense(String subject, String rawBody) {

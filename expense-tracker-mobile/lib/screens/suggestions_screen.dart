@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:expense_tracker_mobile/services/api_service.dart';
+import 'package:expense_tracker_mobile/providers/user_provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:expense_tracker_mobile/screens/all_expenses_screen.dart';
+import 'package:expense_tracker_mobile/models/expense_model.dart';
+import 'package:expense_tracker_mobile/screens/chat_screen.dart';
 
 class SuggestionsScreen extends StatefulWidget {
   const SuggestionsScreen({super.key});
@@ -23,17 +28,82 @@ class _SuggestionsScreenState extends State<SuggestionsScreen> {
     setState(() => _isLoading = true);
     try {
       final api = context.read<ApiService>();
-      final data = await api.getSuggestions();
-      setState(() {
-        _suggestions = data;
-        _isLoading = false;
-      });
+      final user = context.read<UserProvider>().user;
+      
+      if (user != null) {
+        final data = await api.getSuggestions(user.id);
+        setState(() {
+          _suggestions = data;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Error generating insights: $e")),
         );
+      }
+    }
+  }
+
+  Future<void> _handleAction(Map<String, dynamic> item) async {
+    final type = item['type'].toString().toLowerCase();
+    final category = item['category'].toString();
+    final title = item['title'].toString();
+    // Safely get merchant, allowing for null
+    final String? merchant = item['merchant']?.toString();
+
+    if (type == 'subscription') {
+      // Search Google for cancellation
+      final query = Uri.encodeComponent("How to cancel $title subscription");
+      final url = Uri.parse("https://www.google.com/search?q=$query");
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      } else {
+        if (mounted) {
+           ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Could not launch browser")),
+           );
+        }
+      }
+    } else {
+      // Navigate to expenses filtered by this merchant or category
+      setState(() => _isLoading = true);
+      try {
+         final api = context.read<ApiService>();
+         final user = context.read<UserProvider>().user;
+         if (user != null) {
+           final allExpenses = await api.getExpenses(user.id);
+           
+           List<Expense> filtered;
+           if (merchant != null && merchant.isNotEmpty) {
+             // Filter by merchant name (case-insensitive partial match)
+             filtered = allExpenses.where((e) => 
+               e.merchant.toLowerCase().contains(merchant.toLowerCase())
+             ).toList();
+           } else {
+             // Fallback to category
+             filtered = allExpenses.where((e) => 
+               e.category.toLowerCase() == category.toLowerCase()
+             ).toList();
+           }
+           
+           if (mounted) {
+              setState(() => _isLoading = false);
+              Navigator.push(
+                context, 
+                MaterialPageRoute(builder: (context) => AllExpensesScreen(expenses: filtered)),
+              );
+           }
+         }
+      } catch (e) {
+         if (mounted) {
+           setState(() => _isLoading = false);
+           ScaffoldMessenger.of(context).showSnackBar(
+             SnackBar(content: Text("Error fetching details: $e")),
+           );
+         }
       }
     }
   }
@@ -46,6 +116,17 @@ class _SuggestionsScreenState extends State<SuggestionsScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: const Text("AI Insights", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const ChatScreen()),
+          );
+        },
+        backgroundColor: const Color(0xFF6366F1),
+        icon: const Icon(Icons.chat_bubble_outline),
+        label: const Text("Ask AI"),
       ),
       body: _isLoading 
         ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
@@ -128,7 +209,7 @@ class _SuggestionsScreenState extends State<SuggestionsScreen> {
                 ],
               ),
               ElevatedButton(
-                onPressed: () {},
+                onPressed: () => _handleAction(item),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF334155),
                   foregroundColor: Colors.white,

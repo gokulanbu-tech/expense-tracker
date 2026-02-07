@@ -20,6 +20,7 @@ dependencies:
   googleapis: ^11.4.0
   extension_google_sign_in_as_googleapis_auth: ^2.0.13
   url_launcher: ^6.3.2
+  table_calendar: ^3.0.9
 
 dev_dependencies:
   flutter_test:

@@ -5,6 +5,7 @@ import 'package:expense_tracker_mobile/services/api_service.dart';
 import 'package:expense_tracker_mobile/providers/user_provider.dart';
 import 'package:expense_tracker_mobile/screens/add_bill_screen.dart';
 import 'package:expense_tracker_mobile/screens/bill_details_screen.dart';
+import 'package:expense_tracker_mobile/screens/calendar_screen.dart';
 import 'package:intl/intl.dart';
 import '../models/bill_model.dart';
 import '../models/user_model.dart';
@@ -19,6 +20,7 @@ class BillsScreen extends StatefulWidget {
 class _BillsScreenState extends State<BillsScreen> {
   List<Bill> _bills = [];
   bool _isLoading = true;
+  bool _isCalendarView = false;
 
   @override
   void initState() {
@@ -100,6 +102,31 @@ class _BillsScreenState extends State<BillsScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
+          // View Toggle
+          Container(
+            margin: const EdgeInsets.only(right: 8),
+            decoration: BoxDecoration(
+              color: Colors.white10,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: Icon(Icons.list_rounded,
+                      color: !_isCalendarView ? const Color(0xFF6366F1) : Colors.grey),
+                  onPressed: () => setState(() => _isCalendarView = false),
+                  tooltip: "List View",
+                ),
+                IconButton(
+                  icon: Icon(Icons.calendar_month_rounded,
+                      color: _isCalendarView ? const Color(0xFF6366F1) : Colors.grey),
+                  onPressed: () => setState(() => _isCalendarView = true),
+                  tooltip: "Calendar View",
+                ),
+              ],
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.add, color: Color(0xFF6366F1)),
             onPressed: () async {
@@ -116,14 +143,19 @@ class _BillsScreenState extends State<BillsScreen> {
           ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
           : _bills.isEmpty
               ? _buildEmptyState()
-              : ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: _bills.length,
-                  itemBuilder: (context, index) {
-                    final bill = _bills[index];
-                    return _buildBillCard(bill);
-                  },
-                ),
+              : _isCalendarView
+                  ? CalendarScreen(
+                      bills: _bills,
+                      onPay: _payBill, // Pass the existing pay function
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _bills.length,
+                      itemBuilder: (context, index) {
+                        final bill = _bills[index];
+                        return _buildBillCard(bill);
+                      },
+                    ),
     );
   }
 

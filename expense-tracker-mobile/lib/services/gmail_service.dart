@@ -6,6 +6,8 @@ import 'package:expense_tracker_mobile/services/api_service.dart';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class GmailService {
   final GoogleSignIn _googleSignIn = GoogleSignIn(
@@ -38,6 +40,10 @@ class GmailService {
 
     final gmailApi = GmailApi(authenticateClient);
     
+    // Load local processed IDs
+    final prefs = await SharedPreferences.getInstance();
+    List<String> processedIds = prefs.getStringList('processed_email_ids') ?? [];
+
     // Calculate timestamp for X days ago (in seconds)
     final int startTime = (DateTime.now().millisecondsSinceEpoch ~/ 1000) - (daysToFetch * 24 * 60 * 60);
 
@@ -49,13 +55,43 @@ class GmailService {
 
     if (results.messages == null || results.messages!.isEmpty) return;
 
-    for (var messageSummary in results.messages!) {
-      final message = await gmailApi.users.messages.get('me', messageSummary.id!, format: 'full');
-      await _processMessage(message, userId);
+    // Filter: Only process IDs we haven't seen before
+    final newMessages = results.messages!.where((m) => !processedIds.contains(m.id)).toList();
+
+    if (newMessages.isEmpty) {
+      print("No new emails found (Local Cache Hit).");
+      return;
     }
+
+    print("Found ${results.messages!.length} total. Syncing ${newMessages.length} new items...");
+
+    // Process in batches of 5
+    const batchSize = 5;
+    for (var i = 0; i < newMessages.length; i += batchSize) {
+      final batch = newMessages.skip(i).take(batchSize);
+      
+      // Fetch and process this batch in parallel
+      await Future.wait(batch.map((messageSummary) async {
+        try {
+          final message = await gmailApi.users.messages.get('me', messageSummary.id!, format: 'full');
+          bool success = await _processMessage(message, userId);
+          if (success && message.id != null) {
+            processedIds.add(message.id!);
+          }
+        } catch (e) {
+          print("Error processing message ${messageSummary.id}: $e");
+        }
+      }));
+    }
+
+    // Update Cache (Keep last 1000)
+    if (processedIds.length > 1000) {
+      processedIds = processedIds.sublist(processedIds.length - 1000);
+    }
+    await prefs.setStringList('processed_email_ids', processedIds);
   }
 
-  Future<void> _processMessage(Message message, String userId) async {
+  Future<bool> _processMessage(Message message, String userId) async {
     String? body;
     String subject = "";
     String sender = "";
@@ -90,7 +126,7 @@ class GmailService {
 
     if (!strictFilter.hasMatch(combinedText)) {
       print("Skipping email (Pattern mismatch): $subject");
-      return;
+      return false;
     }
 
     final emailData = {
@@ -107,8 +143,10 @@ class GmailService {
     try {
       await _apiService.saveEmailLog(emailData);
       print("Successfully synced email: $subject");
+      return true;
     } catch (e) {
       print("Error syncing email log: $e");
+      return false;
     }
   }
 

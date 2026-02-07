@@ -26,7 +26,7 @@ class UserProvider with ChangeNotifier {
       notifyListeners();
       // Auto-sync emails in background if logged in
       if (_user != null) {
-        _gmailService.syncExpenses(_user!.id).then((_) => notifyListeners());
+        _gmailService.syncExpenses(_user!.id, daysToFetch: 10).then((_) => notifyListeners());
       }
     }
   }
@@ -50,7 +50,7 @@ class UserProvider with ChangeNotifier {
 
   Future<void> syncEmails() async {
     if (_user != null) {
-      await _gmailService.syncExpenses(_user!.id);
+      await _gmailService.syncExpenses(_user!.id, daysToFetch: 10);
       notifyListeners();
     }
   }
@@ -66,8 +66,10 @@ class UserProvider with ChangeNotifier {
     
     notifyListeners();
 
-    // Trigger initial sync on login
-    syncEmails();
+    // Trigger initial sync on login (fetch 30 days history)
+    if (user != null) {
+       _gmailService.syncExpenses(user.id, daysToFetch: 30);
+    }
   }
 
   Future<void> logout() async {

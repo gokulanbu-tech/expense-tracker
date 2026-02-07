@@ -5,8 +5,8 @@ import '../models/expense_model.dart';
 import '../models/bill_model.dart';
 
 class ApiService {
-  // Use 10.0.2.2 for Android Emulator to reach localhost
-  static const String baseUrl = "http://10.0.2.2:8080/api";
+  // Use local IP to reach backend from Emulator/Real Device
+  static const String baseUrl = "http://192.168.1.103:8080/api";
 
   Future<void> sendSmsToBackend(Map<String, dynamic> smsData) async {
     final response = await http.post(

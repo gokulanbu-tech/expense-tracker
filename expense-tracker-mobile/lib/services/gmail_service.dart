@@ -18,7 +18,7 @@ class GmailService {
     return await _googleSignIn.signIn();
   }
 
-  Future<void> syncExpenses(String userId) async {
+  Future<void> syncExpenses(String userId, {int daysToFetch = 10}) async {
     final GoogleSignInAccount? account = await _googleSignIn.signInSilently();
     if (account == null) return;
 
@@ -38,13 +38,13 @@ class GmailService {
 
     final gmailApi = GmailApi(authenticateClient);
     
-    // Calculate timestamp for 24 hours ago (in seconds)
-    final int oneDayAgo = (DateTime.now().millisecondsSinceEpoch ~/ 1000) - (24 * 60 * 60);
+    // Calculate timestamp for X days ago (in seconds)
+    final int startTime = (DateTime.now().millisecondsSinceEpoch ~/ 1000) - (daysToFetch * 24 * 60 * 60);
 
-    // Updated query: Filter by subject keywords only, strictly after 24 hours ago
+    // Updated query: Filter by subject keywords only, strictly after startTime
     final results = await gmailApi.users.messages.list(
       'me',
-      q: 'subject:(debited OR credited OR spent) after:$oneDayAgo',
+      q: 'subject:(debited OR credited OR spent) after:$startTime',
     );
 
     if (results.messages == null || results.messages!.isEmpty) return;
